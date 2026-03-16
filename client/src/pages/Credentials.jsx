@@ -14,6 +14,7 @@ export default function Credentials() {
   const [cu, setCu] = useState(cr.cu);
   const [status, setStatus] = useState(null);
   const [accounts, setAccounts] = useState([]);
+  const [selectedName, setSelectedName] = useState('');
 
   const save = () => {
     const newCr = {
@@ -53,9 +54,11 @@ export default function Credentials() {
   const listAccts = async () => {
     setAccounts([]);
     try {
+      const mccId = cr.mcc.replace(/-/g, '');
+      if (!mccId) { setStatus({ type: 'ae', msg: '❌ MCC Account ID is required to list accounts' }); return; }
       const d = await gads('googleAds:searchStream', {
         query: 'SELECT customer_client.client_customer, customer_client.descriptive_name, customer_client.status FROM customer_client WHERE customer_client.level <= 1',
-      });
+      }, 'POST', { customerId: mccId });
       const rows = d?.[0]?.results || d?.results || [];
       setAccounts(rows.map((x) => {
         const cc = x.customerClient;
@@ -73,7 +76,8 @@ export default function Credentials() {
   const pickAcct = (id, name) => {
     setCu(id);
     setCr({ cu: id });
-    setStatus({ type: 'as', msg: `✅ Selected: ${name} (${id})` });
+    setSelectedName(name);
+    log(`Selected account: ${name} (${id})`);
   };
 
   return (
@@ -129,24 +133,40 @@ export default function Credentials() {
           <div><div className="ct">Select Ad Account</div></div>
           <button className="btn bs sm" onClick={listAccts}>📋 List Accounts</button>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-          <div className="fg" style={{ flex: 1, margin: 0 }}>
-            <label>Customer Account ID</label>
-            <input value={cu} onChange={(e) => { setCu(e.target.value); setCr({ cu: e.target.value.replace(/-/g, '') }); }} placeholder="987-654-3210" />
-          </div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          {accounts.map((a) => (
-            <div key={a.id} className="camp-row">
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{a.name}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>{a.id}</div>
-              </div>
-              <span className={`tag ${a.status === 'ENABLED' ? 'tg' : 'ty'}`}>{a.status}</span>
-              <button className="btn bs sm" onClick={() => pickAcct(a.id, a.name)}>Select</button>
+
+        {cu && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--primary-light, #eef2ff)', borderRadius: 10, marginBottom: 12 }}>
+            <span style={{ fontSize: 20 }}>✅</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary, #6366f1)' }}>{selectedName || 'Selected Account'}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)' }}>{cu}</div>
             </div>
-          ))}
-        </div>
+            <button className="btn bs sm" onClick={() => { setCu(''); setCr({ cu: '' }); setSelectedName(''); }}>Change</button>
+          </div>
+        )}
+
+        {!cu && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+            <div className="fg" style={{ flex: 1, margin: 0 }}>
+              <label>Customer Account ID</label>
+              <input value={cu} onChange={(e) => { setCu(e.target.value); setCr({ cu: e.target.value.replace(/-/g, '') }); }} placeholder="987-654-3210 or click List Accounts" />
+            </div>
+          </div>
+        )}
+
+        {accounts.length > 0 && !cu && (
+          <div style={{ marginTop: 12 }}>
+            {accounts.map((a) => (
+              <div key={a.id} className="camp-row" style={{ cursor: 'pointer' }} onClick={() => pickAcct(a.id, a.name)}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{a.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{a.id}</div>
+                </div>
+                <span className={`tag ${a.status === 'ENABLED' ? 'tg' : 'ty'}`}>{a.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

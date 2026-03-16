@@ -29,15 +29,15 @@ export async function getToken() {
 }
 
 /**
- * Make a Google Ads API v17 call (proxied through backend).
+ * Make a Google Ads API v23 call (proxied through backend).
  */
-export async function gads(endpoint, body, method = 'POST') {
+export async function gads(endpoint, body, method = 'POST', { customerId } = {}) {
   const tok = await getToken();
   const { cr } = useStore.getState();
-  const cid = cr.cu || cr.mcc;
+  const cid = customerId || cr.cu || cr.mcc;
   if (!cid) throw new Error('Customer ID not set');
 
-  const url = `https://googleads.googleapis.com/v17/customers/${cid}/${endpoint}`;
+  const url = `https://googleads.googleapis.com/v23/customers/${cid}/${endpoint}`;
   const r = await fetch('/api/google/ads', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

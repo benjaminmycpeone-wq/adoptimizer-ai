@@ -10,6 +10,7 @@ import Builder from './pages/Builder';
 import Keywords from './pages/Keywords';
 import AdCopy from './pages/AdCopy';
 import Campaigns from './pages/Campaigns';
+import CampaignReview from './pages/CampaignReview';
 import './styles/variables.css';
 import './styles/base.css';
 import './styles/components.css';
@@ -28,6 +29,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="keywords" element={<Keywords />} />
           <Route path="ad-copy" element={<AdCopy />} />
           <Route path="campaigns" element={<Campaigns />} />
+          <Route path="campaign-review" element={<CampaignReview />} />
         </Route>
       </Routes>
     </BrowserRouter>

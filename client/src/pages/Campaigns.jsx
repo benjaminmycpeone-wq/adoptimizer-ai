@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import useStore from '../store';
-import { getToken } from '../auth';
+import { gads } from '../auth';
 import { listCampaigns } from '../api';
 
 export default function Campaigns() {
@@ -19,21 +19,9 @@ export default function Campaigns() {
     setLoading(true);
     setError(null);
     try {
-      const tok = await getToken();
-      const cid = cr.cu || cr.mcc;
-      const r = await fetch(`https://googleads.googleapis.com/v17/customers/${cid}/googleAds:searchStream`, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + tok,
-          'developer-token': cr.dt,
-          'Content-Type': 'application/json',
-          'login-customer-id': cr.mcc,
-        },
-        body: JSON.stringify({
-          query: 'SELECT campaign.id, campaign.name, campaign.status, campaign_budget.amount_micros FROM campaign ORDER BY campaign.id DESC LIMIT 25',
-        }),
+      const d = await gads('googleAds:searchStream', {
+        query: 'SELECT campaign.id, campaign.name, campaign.status, campaign_budget.amount_micros FROM campaign ORDER BY campaign.id DESC LIMIT 25',
       });
-      const d = await r.json();
       const rows = d?.[0]?.results || [];
       setCampaigns(rows.map((x) => ({
         id: x.campaign.id,

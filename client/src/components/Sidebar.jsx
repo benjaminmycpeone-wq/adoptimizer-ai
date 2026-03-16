@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { section: 'Tools', style: { marginTop: 6 } },
   { path: '/keywords', icon: '🔤', label: 'Keyword Research' },
   { path: '/ad-copy', icon: '✍️', label: 'Ad Copy Generator' },
+  { path: '/campaign-review', icon: '🔎', label: 'Campaign Review' },
 ];
 
 export default function Sidebar() {

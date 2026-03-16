@@ -12,7 +12,7 @@ from .models import Campaign, Keyword, AdCopy
 
 google_ads_bp = Blueprint("google_ads", __name__)
 
-GOOGLE_ADS_API_VERSION = "v17"
+GOOGLE_ADS_API_VERSION = "v23"
 
 
 @google_ads_bp.route("/api/google/token", methods=["POST"])
