@@ -37,8 +37,14 @@ def proxy_gads():
     body = data.get("body")
     method = data.get("method", "POST")
 
-    r = http_requests.request(method, url, headers=headers, json=body if body else None)
-    return jsonify(r.json()), r.status_code
+    try:
+        r = http_requests.request(method, url, headers=headers, json=body if body else None)
+        try:
+            return jsonify(r.json()), r.status_code
+        except Exception:
+            return jsonify({"error": r.text[:500]}), r.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 def _gads_url(customer_id, endpoint):
