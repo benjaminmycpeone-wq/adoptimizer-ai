@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flask-backend",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "server.app"],
+      "port": 5055
+    },
+    {
+      "name": "vite-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    }
+  ]
+}

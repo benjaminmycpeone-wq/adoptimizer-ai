@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: adoptimizer
+      POSTGRES_USER: adoptimizer
+      POSTGRES_PASSWORD: adoptimizer
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "5055:5055"
+    environment:
+      PORT: "5055"
+      DATABASE_URL: "postgresql://adoptimizer:adoptimizer@db:5432/adoptimizer"
+      FLASK_ENV: development
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

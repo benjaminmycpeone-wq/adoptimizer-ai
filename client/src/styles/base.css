@@ -1,0 +1,23 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+/* ── Layout ── */
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.main { overflow-y: auto; background: var(--bg); }
+.content { padding: 24px 28px; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ── Animations ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.spin { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.35); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+.spin-dark { width: 15px; height: 15px; border: 2px solid rgba(79,99,232,.25); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+.pulse { animation: pulse 2s infinite; }
+
+code { background: var(--surface3); border: 1px solid var(--border); padding: 1px 7px; border-radius: 5px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text2); }
+a { color: var(--accent); }
