@@ -5,6 +5,7 @@ Credentials are passed per-request from the client (never stored server-side).
 """
 
 import json
+import requests as http_requests
 from flask import Blueprint, request, jsonify
 from .db import db
 from .models import Campaign, Keyword, AdCopy
@@ -12,6 +13,32 @@ from .models import Campaign, Keyword, AdCopy
 google_ads_bp = Blueprint("google_ads", __name__)
 
 GOOGLE_ADS_API_VERSION = "v17"
+
+
+@google_ads_bp.route("/api/google/token", methods=["POST"])
+def refresh_token():
+    """Proxy OAuth token refresh to avoid CORS issues."""
+    data = request.get_json(force=True) or {}
+    r = http_requests.post("https://oauth2.googleapis.com/token", data={
+        "client_id": data.get("client_id"),
+        "client_secret": data.get("client_secret"),
+        "refresh_token": data.get("refresh_token"),
+        "grant_type": "refresh_token",
+    })
+    return jsonify(r.json()), r.status_code
+
+
+@google_ads_bp.route("/api/google/ads", methods=["POST"])
+def proxy_gads():
+    """Proxy Google Ads API calls to avoid CORS issues."""
+    data = request.get_json(force=True) or {}
+    url = data.get("url")
+    headers = data.get("headers", {})
+    body = data.get("body")
+    method = data.get("method", "POST")
+
+    r = http_requests.request(method, url, headers=headers, json=body if body else None)
+    return jsonify(r.json()), r.status_code
 
 
 def _gads_url(customer_id, endpoint):

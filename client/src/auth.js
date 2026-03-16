@@ -10,14 +10,13 @@ export async function getToken() {
   const { cid, cs, rt } = cr;
   if (!cid || !cs || !rt) throw new Error('Google Ads credentials not set');
 
-  const r = await fetch('https://oauth2.googleapis.com/token', {
+  const r = await fetch('/api/google/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       client_id: cid,
       client_secret: cs,
       refresh_token: rt,
-      grant_type: 'refresh_token',
     }),
   });
   const d = await r.json();
@@ -30,7 +29,7 @@ export async function getToken() {
 }
 
 /**
- * Make a Google Ads API v17 call.
+ * Make a Google Ads API v17 call (proxied through backend).
  */
 export async function gads(endpoint, body, method = 'POST') {
   const tok = await getToken();
@@ -38,15 +37,21 @@ export async function gads(endpoint, body, method = 'POST') {
   const cid = cr.cu || cr.mcc;
   if (!cid) throw new Error('Customer ID not set');
 
-  const r = await fetch(`https://googleads.googleapis.com/v17/customers/${cid}/${endpoint}`, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${tok}`,
-      'developer-token': cr.dt,
-      'Content-Type': 'application/json',
-      'login-customer-id': cr.mcc,
-    },
-    body: body ? JSON.stringify(body) : undefined,
+  const url = `https://googleads.googleapis.com/v17/customers/${cid}/${endpoint}`;
+  const r = await fetch('/api/google/ads', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url,
+      method,
+      headers: {
+        'Authorization': `Bearer ${tok}`,
+        'developer-token': cr.dt,
+        'Content-Type': 'application/json',
+        'login-customer-id': cr.mcc,
+      },
+      body: body || undefined,
+    }),
   });
   const d = await r.json();
   if (!r.ok) {

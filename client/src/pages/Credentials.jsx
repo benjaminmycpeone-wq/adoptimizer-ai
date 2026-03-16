@@ -53,22 +53,10 @@ export default function Credentials() {
   const listAccts = async () => {
     setAccounts([]);
     try {
-      const tok = await getToken();
-      const mccId = useStore.getState().cr.mcc;
-      const r = await fetch(`https://googleads.googleapis.com/v17/customers/${mccId}/googleAds:searchStream`, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + tok,
-          'developer-token': useStore.getState().cr.dt,
-          'Content-Type': 'application/json',
-          'login-customer-id': mccId,
-        },
-        body: JSON.stringify({
-          query: 'SELECT customer_client.client_customer, customer_client.descriptive_name, customer_client.status FROM customer_client WHERE customer_client.level <= 1',
-        }),
+      const d = await gads('googleAds:searchStream', {
+        query: 'SELECT customer_client.client_customer, customer_client.descriptive_name, customer_client.status FROM customer_client WHERE customer_client.level <= 1',
       });
-      const d = await r.json();
-      const rows = d?.[0]?.results || [];
+      const rows = d?.[0]?.results || d?.results || [];
       setAccounts(rows.map((x) => {
         const cc = x.customerClient;
         return {
