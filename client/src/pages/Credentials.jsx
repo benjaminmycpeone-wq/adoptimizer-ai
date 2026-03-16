@@ -80,7 +80,7 @@ export default function Credentials() {
     <>
       <div className="al aw">
         <span>🔒</span>
-        <div>Credentials stay in browser memory only — sent only to Google's OAuth and Ads API.</div>
+        <div>Credentials saved in your browser's local storage — sent only to Google's OAuth and Ads API.</div>
       </div>
 
       <div className="card card-gradient">

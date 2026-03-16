@@ -58,7 +58,7 @@ export default function ApiKey() {
 
       <div className="al aw">
         <span>🔒</span>
-        <div>Key is stored in browser memory only — cleared when you close this tab.</div>
+        <div>Key is saved in your browser's local storage — persists across sessions.</div>
       </div>
 
       <div className="fr">

@@ -1,13 +1,34 @@
 import { create } from 'zustand';
 
+// Load persisted settings from localStorage
+function loadPersisted() {
+  try {
+    const raw = localStorage.getItem('adoptimizer_settings');
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function savePersisted(state) {
+  try {
+    localStorage.setItem('adoptimizer_settings', JSON.stringify({
+      aiKey: state.aiKey,
+      aiProv: state.aiProv,
+      aiMod: state.aiMod,
+      cr: state.cr,
+    }));
+  } catch { /* ignore */ }
+}
+
+const persisted = loadPersisted();
+
 const useStore = create((set, get) => ({
   // AI settings
-  aiKey: '',
-  aiProv: 'anthropic',
-  aiMod: 'claude-sonnet-4-20250514',
+  aiKey: persisted.aiKey || '',
+  aiProv: persisted.aiProv || 'anthropic',
+  aiMod: persisted.aiMod || 'claude-sonnet-4-20250514',
 
   // Google Ads credentials
-  cr: { dt: '', cid: '', cs: '', rt: '', mcc: '', cu: '' },
+  cr: persisted.cr || { dt: '', cid: '', cs: '', rt: '', mcc: '', cu: '' },
 
   // OAuth token cache
   tok: null,
@@ -36,11 +57,15 @@ const useStore = create((set, get) => ({
   currentCampaignId: null,
 
   // Actions
-  setAiKey: (key) => set({ aiKey: key }),
-  setAiProv: (prov) => set({ aiProv: prov }),
-  setAiMod: (mod) => set({ aiMod: mod }),
+  setAiKey: (key) => { set({ aiKey: key }); savePersisted({ ...get(), aiKey: key }); },
+  setAiProv: (prov) => { set({ aiProv: prov }); savePersisted({ ...get(), aiProv: prov }); },
+  setAiMod: (mod) => { set({ aiMod: mod }); savePersisted({ ...get(), aiMod: mod }); },
 
-  setCr: (cr) => set({ cr: { ...get().cr, ...cr } }),
+  setCr: (cr) => {
+    const merged = { ...get().cr, ...cr };
+    set({ cr: merged });
+    savePersisted({ ...get(), cr: merged });
+  },
   setTok: (tok, exp) => set({ tok, tokExp: exp }),
 
   setScraperOnline: (online) => set({ scraperOnline: online }),
