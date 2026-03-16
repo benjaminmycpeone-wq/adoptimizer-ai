@@ -32,6 +32,7 @@ COPY server/ ./server/
 COPY --from=frontend /app/client/dist ./server/static/
 
 ENV FLASK_ENV=production
+ENV PORT=5055
 EXPOSE 5055
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5055", "--workers", "2", "--timeout", "120", "server.app:create_app()"]
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 "server.app:create_app()"
