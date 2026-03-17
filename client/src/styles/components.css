@@ -39,6 +39,9 @@ input, select, textarea {
   border-radius: 9px; padding: 9px 12px; color: var(--text);
   font-size: 13px; outline: none; transition: all .18s; font-family: inherit;
 }
+input[type="checkbox"], input[type="radio"] {
+  width: auto; padding: 0; border-radius: 3px;
+}
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,99,232,.1); background: #fff; }
 textarea { resize: vertical; }
 .fg { margin-bottom: 13px; }
@@ -77,7 +80,7 @@ textarea { resize: vertical; }
 .chip .x { cursor: pointer; color: var(--accent-mid); font-size: 14px; line-height: 1; }
 .chip .x:hover { color: var(--red); }
 
-/* ── AI Output ── */
+/* ── AI Output (legacy raw) ── */
 .aio {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 10px; padding: 14px; font-size: 12.5px; line-height: 1.75;
@@ -85,6 +88,43 @@ textarea { resize: vertical; }
   color: var(--text); font-family: 'DM Mono', monospace; min-height: 60px;
 }
 .aio:empty::before { content: 'AI output will appear here…'; color: var(--muted); font-style: italic; font-family: 'DM Sans', sans-serif; }
+
+/* ── AI Output (markdown) ── */
+.aio-md {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px; font-size: 13px; line-height: 1.7;
+  max-height: 600px; overflow-y: auto;
+  color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 60px;
+  scroll-behavior: smooth;
+}
+.aio-placeholder { color: var(--muted); font-style: italic; }
+.aio-md h1, .aio-md h2 { font-size: 16px; font-weight: 700; color: var(--accent); margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent-soft); }
+.aio-md h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 16px 0 8px; }
+.aio-md h4 { font-size: 13px; font-weight: 700; color: var(--text2); margin: 12px 0 6px; }
+.aio-md p { margin: 6px 0; }
+.aio-md ul, .aio-md ol { margin: 6px 0; padding-left: 20px; }
+.aio-md li { margin: 3px 0; }
+.aio-md strong { color: var(--text); font-weight: 700; }
+.aio-md em { color: var(--text2); }
+.aio-md blockquote {
+  margin: 10px 0; padding: 10px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft); border-radius: 0 8px 8px 0;
+  font-size: 12.5px; color: #3d52c8;
+}
+.aio-md code {
+  background: var(--surface3); padding: 1px 5px; border-radius: 4px;
+  font-size: 12px; font-family: 'DM Mono', monospace; color: var(--accent);
+}
+.aio-md pre { background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; margin: 8px 0; }
+.aio-md pre code { background: none; padding: 0; font-size: 11.5px; color: var(--text); }
+.aio-md table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+.aio-md th { background: var(--accent-soft); color: var(--accent); font-weight: 700; text-align: left; padding: 8px 10px; border: 1px solid var(--accent-mid); font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
+.aio-md td { padding: 7px 10px; border: 1px solid var(--border); vertical-align: top; }
+.aio-md tr:nth-child(even) td { background: var(--surface2); }
+.aio-md tr:hover td { background: var(--accent-soft); }
+.aio-md hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.aio-md input[type="checkbox"] { margin-right: 6px; accent-color: var(--accent); }
 
 /* ── Wizard steps ── */
 .ws { display: flex; margin-bottom: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 4px; gap: 3px; }

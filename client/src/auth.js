@@ -55,7 +55,11 @@ export async function gads(endpoint, body, method = 'POST', { customerId } = {})
   });
   const d = await r.json();
   if (!r.ok) {
-    const m = d?.error?.details?.[0]?.errors?.[0]?.message || d?.error?.message || JSON.stringify(d);
+    // Extract the most specific error message available from Google Ads API response
+    const detail = d?.error?.details?.[0]?.errors?.[0];
+    const m = detail
+      ? `${detail.message}${detail.errorCode ? ` [${Object.entries(detail.errorCode).map(([k,v]) => `${k}: ${v}`).join(', ')}]` : ''}`
+      : d?.error?.message || JSON.stringify(d);
     throw new Error(m);
   }
   return d;

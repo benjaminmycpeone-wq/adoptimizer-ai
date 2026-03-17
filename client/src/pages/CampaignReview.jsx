@@ -7,36 +7,54 @@ import AiOutput from '../components/AiOutput';
 
 function parseActions(text) {
   const actions = [];
-  const regex = /```json\s*\n?([\s\S]*?)```/g;
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    try {
-      const parsed = JSON.parse(match[1].trim());
-      if (parsed.type && ['ADD_NEGATIVE', 'PAUSE_KEYWORD', 'ADD_KEYWORD', 'PAUSE_AD', 'UPDATE_BUDGET'].includes(parsed.type)) {
-        actions.push({ ...parsed, checked: true, status: 'pending' });
-      }
-    } catch { /* skip non-parseable blocks */ }
+  // Match ```json blocks — handle optional whitespace, newlines, and language tag variations
+  const patterns = [
+    /```json\s*\n?([\s\S]*?)```/g,
+    /```JSON\s*\n?([\s\S]*?)```/g,
+    /```\s*\n?(\{[\s\S]*?"type"\s*:[\s\S]*?\})\s*\n?```/g,
+  ];
+  const seen = new Set();
+  for (const regex of patterns) {
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      try {
+        const raw = match[1].trim();
+        const parsed = JSON.parse(raw);
+        if (parsed.type && ['ADD_NEGATIVE', 'PAUSE_KEYWORD', 'ADD_KEYWORD', 'PAUSE_AD', 'UPDATE_BUDGET'].includes(parsed.type)) {
+          const key = `${parsed.type}|${parsed.keyword || ''}|${parsed.resourceName || ''}|${parsed.newBudget || ''}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            actions.push({ ...parsed, checked: true, status: 'pending' });
+          }
+        }
+      } catch { /* skip */ }
+    }
   }
   return actions;
 }
 
 function describeAction(a) {
   switch (a.type) {
-    case 'ADD_NEGATIVE': return `Add negative keyword: "${a.keyword}" (${a.matchType})`;
-    case 'PAUSE_KEYWORD': return `Pause keyword: "${a.keyword}"`;
-    case 'ADD_KEYWORD': return `Add keyword: "${a.keyword}" (${a.matchType})`;
-    case 'PAUSE_AD': return `Pause ad`;
-    case 'UPDATE_BUDGET': return `Update daily budget to $${a.newBudget}`;
+    case 'ADD_NEGATIVE': return `Add negative: "${a.keyword || '?'}" (${a.matchType || 'PHRASE'})`;
+    case 'PAUSE_KEYWORD': return `Pause: "${a.keyword || a.resourceName?.split('~').pop() || '?'}"`;
+    case 'ADD_KEYWORD': return `Add keyword: "${a.keyword || '?'}" (${a.matchType || 'PHRASE'})`;
+    case 'PAUSE_AD': return `Pause ad (${a.resourceName?.split('~').pop() || 'weak ad'})`;
+    case 'UPDATE_BUDGET': return `Change budget → $${a.newBudget}/day`;
     default: return a.type;
   }
 }
 
-const ACTION_ICONS = {
-  ADD_NEGATIVE: '🚫', PAUSE_KEYWORD: '⏸️', ADD_KEYWORD: '➕', PAUSE_AD: '⏸️', UPDATE_BUDGET: '💰',
+const ACTION_META = {
+  ADD_NEGATIVE: { icon: '🚫', label: 'NEGATIVE', color: 'tr', group: 'Block Wasteful Spend' },
+  PAUSE_KEYWORD: { icon: '⏸️', label: 'PAUSE KW', color: 'ty', group: 'Pause Underperformers' },
+  ADD_KEYWORD: { icon: '➕', label: 'ADD KW', color: 'tg', group: 'Add Missing Keywords' },
+  PAUSE_AD: { icon: '⏸️', label: 'PAUSE AD', color: 'ty', group: 'Pause Weak Ads' },
+  UPDATE_BUDGET: { icon: '💰', label: 'BUDGET', color: 'tb', group: 'Budget Changes' },
 };
-const STATUS_LABELS = {
-  pending: '', executing: '⏳', done: '✅', failed: '❌',
-};
+
+const ACTION_ORDER = ['ADD_NEGATIVE', 'PAUSE_KEYWORD', 'ADD_KEYWORD', 'PAUSE_AD', 'UPDATE_BUDGET'];
+
+const STATUS_ICON = { pending: '', executing: '⏳', done: '✅', failed: '❌' };
 
 export default function CampaignReview() {
   const cr = useStore((s) => s.cr);
@@ -50,13 +68,10 @@ export default function CampaignReview() {
   const [reviewing, setReviewing] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState(null);
-
-  // Action checklist state
   const [actions, setActions] = useState([]);
   const [confirming, setConfirming] = useState(false);
   const [applying, setApplying] = useState(false);
 
-  // Parse actions when AI review completes
   useEffect(() => {
     if (text && !reviewing) {
       const parsed = parseActions(text);
@@ -70,6 +85,8 @@ export default function CampaignReview() {
     setSelected(null);
     setCampaignData(null);
     setActions([]);
+    setText('');
+    setShowResult(false);
     try {
       const d = await gads('googleAds:searchStream', {
         query: `SELECT campaign.id, campaign.name, campaign.status, campaign.bidding_strategy_type, campaign.resource_name, campaign_budget.amount_micros, campaign_budget.resource_name FROM campaign WHERE campaign.status != 'REMOVED' ORDER BY campaign.name LIMIT 50`,
@@ -82,6 +99,7 @@ export default function CampaignReview() {
         bidding: r.campaign.biddingStrategyType || 'N/A',
         resourceName: r.campaign.resourceName,
         budgetResource: r.campaignBudget?.resourceName || '',
+        budgetRaw: r.campaignBudget?.amountMicros ? parseInt(r.campaignBudget.amountMicros) / 1e6 : 0,
         budget: r.campaignBudget?.amountMicros
           ? '$' + (parseInt(r.campaignBudget.amountMicros) / 1e6).toFixed(0) + '/day'
           : 'N/A',
@@ -130,7 +148,7 @@ export default function CampaignReview() {
       const keywordsFormatted = kwRows.length
         ? kwRows.map((r) => {
             const qs = r.adGroupCriterion?.qualityInfo?.qualityScore;
-            return `- [${r.adGroup.name}] ${r.adGroupCriterion.keyword.text} (${r.adGroupCriterion.keyword.matchType})${qs ? ` QS:${qs}` : ''} [resource: ${r.adGroupCriterion.resourceName}] [adGroup: ${r.adGroup.resourceName}]`;
+            return `- [${r.adGroup.name}] ${r.adGroupCriterion.keyword.text} (${r.adGroupCriterion.keyword.matchType})${qs ? ` QS:${qs}` : ''} status:${r.adGroupCriterion.status} [resource: ${r.adGroupCriterion.resourceName}] [adGroup: ${r.adGroup.resourceName}]`;
           }).join('\n')
         : 'No keywords found.';
 
@@ -140,7 +158,7 @@ export default function CampaignReview() {
             const headlines = ad.responsiveSearchAd?.headlines?.map((h) => h.text).join(' | ') || 'N/A';
             const descs = ad.responsiveSearchAd?.descriptions?.map((d) => d.text).join(' | ') || 'N/A';
             const urls = ad.finalUrls?.join(', ') || 'N/A';
-            return `- [${r.adGroup.name}] Headlines: ${headlines}\n  Descriptions: ${descs}\n  URLs: ${urls} | Strength: ${r.adGroupAd?.adStrength || 'N/A'} [resource: ${r.adGroupAd.resourceName}]`;
+            return `- [${r.adGroup.name}] Headlines: ${headlines}\n  Descriptions: ${descs}\n  URLs: ${urls} | Strength: ${r.adGroupAd?.adStrength || 'N/A'} | Status: ${r.adGroupAd?.status || 'N/A'} [resource: ${r.adGroupAd.resourceName}]`;
           }).join('\n')
         : 'No ads found.';
 
@@ -153,11 +171,21 @@ export default function CampaignReview() {
           }).join('\n')
         : 'No search term data available (may require more campaign history).';
 
+      // Compute summary stats (API returns strings — must parseInt/parseFloat)
+      const totalClicks = stRows.reduce((s, r) => s + Number(r.metrics?.clicks || 0), 0);
+      const totalCost = stRows.reduce((s, r) => s + (Number(r.metrics?.costMicros || 0) / 1e6), 0);
+      const totalConv = stRows.reduce((s, r) => s + Number(r.metrics?.conversions || 0), 0);
+      const avgQs = kwRows.filter(r => r.adGroupCriterion?.qualityInfo?.qualityScore).reduce((acc, r, _, arr) => acc + Number(r.adGroupCriterion.qualityInfo.qualityScore) / arr.length, 0);
+
       setCampaignData({
         adGroups: agRows.length,
         keywords: kwRows.length,
         ads: adRows.length,
         searchTerms: stRows.length,
+        totalClicks,
+        totalCost: totalCost.toFixed(2),
+        totalConv,
+        avgQs: avgQs ? avgQs.toFixed(1) : null,
         adGroupsFormatted,
         keywordsFormatted,
         adsFormatted,
@@ -189,7 +217,7 @@ export default function CampaignReview() {
         ads: campaignData.adsFormatted,
         searchTerms: campaignData.searchTermsFormatted,
       });
-      const result = await callAI(prompt, (_, full) => setText(full));
+      const result = await callAI(prompt, (_, full) => setText(full), { maxTokens: 8000 });
       setText(result);
       log(`AI review complete: ${selected.name}`);
     } catch (e) {
@@ -202,15 +230,18 @@ export default function CampaignReview() {
     setActions((prev) => prev.map((a, i) => i === idx ? { ...a, checked: !a.checked } : a));
   };
 
+  const selectAllActions = (val) => {
+    setActions((prev) => prev.map((a) => a.status !== 'done' ? { ...a, checked: val } : a));
+  };
+
   const executeAction = async (action) => {
-    const cid = cr.cu || cr.mcc;
     switch (action.type) {
       case 'ADD_NEGATIVE':
         return gads('campaignCriteria:mutate', {
           operations: [{
             create: {
               campaign: selected.resourceName,
-              criterion: { keyword: { text: action.keyword, matchType: action.matchType } },
+              keyword: { text: action.keyword, matchType: action.matchType || 'PHRASE' },
               negative: true,
             },
           }],
@@ -223,12 +254,14 @@ export default function CampaignReview() {
           }],
         });
       case 'ADD_KEYWORD':
-        return gads('adGroupCriteria:mutate', {
-          operations: [{
-            create: {
-              adGroup: action.adGroupResource,
-              status: 'ENABLED',
-              keyword: { text: action.keyword, matchType: action.matchType },
+        return gads('googleAds:mutate', {
+          mutateOperations: [{
+            adGroupCriterionOperation: {
+              create: {
+                adGroup: action.adGroupResource,
+                status: 'ENABLED',
+                keyword: { text: action.keyword, matchType: action.matchType || 'PHRASE' },
+              },
             },
           }],
         });
@@ -257,7 +290,7 @@ export default function CampaignReview() {
   const applyChanges = async () => {
     setConfirming(false);
     setApplying(true);
-    const checkedIndexes = actions.map((a, i) => a.checked ? i : -1).filter((i) => i >= 0);
+    const checkedIndexes = actions.map((a, i) => (a.checked && a.status !== 'done') ? i : -1).filter((i) => i >= 0);
 
     for (const idx of checkedIndexes) {
       setActions((prev) => prev.map((a, i) => i === idx ? { ...a, status: 'executing' } : a));
@@ -273,191 +306,247 @@ export default function CampaignReview() {
     log('Finished applying changes');
   };
 
-  const checkedCount = actions.filter((a) => a.checked).length;
+  const checkedCount = actions.filter((a) => a.checked && (a.status === 'pending' || a.status === 'failed')).length;
+  const doneCount = actions.filter((a) => a.status === 'done').length;
+  const failedCount = actions.filter((a) => a.status === 'failed').length;
   const statusColor = { ENABLED: 'tg', PAUSED: 'ty', REMOVED: 'tr' };
 
   return (
     <>
+      {/* Campaign list */}
       <div className="card">
         <div className="ch">
           <div>
             <div className="ct">🔎 Campaign Review</div>
-            <div className="cs">AI-powered expert audit of your Google Ads campaigns</div>
+            <div className="cs">Select a campaign to run an AI-powered expert audit</div>
           </div>
-          <button className="btn bs sm" onClick={fetchCampaigns} disabled={loading}>
-            {loading ? <><span className="spin-dark" /> Loading...</> : '🔄 Load Campaigns'}
+          <button className="btn bp" onClick={fetchCampaigns} disabled={loading}>
+            {loading ? <><span className="spin" /> Loading...</> : '🔄 Load Campaigns'}
           </button>
         </div>
 
         {error && <div className="al ae">❌ {error}</div>}
 
         {campaigns.length > 0 && (
-          <div style={{ marginTop: 8 }}>
-            {campaigns.map((c) => (
-              <div
-                key={c.id}
-                className="camp-row"
-                style={{
-                  cursor: 'pointer',
-                  background: selected?.id === c.id ? 'var(--primary-light, #eef2ff)' : undefined,
-                  borderColor: selected?.id === c.id ? 'var(--primary, #6366f1)' : undefined,
-                }}
-                onClick={() => selectCampaign(c)}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                    {c.budget} · {c.bidding}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+            {campaigns.map((c) => {
+              const isSelected = selected?.id === c.id;
+              return (
+                <div
+                  key={c.id}
+                  className="camp-row"
+                  style={{
+                    cursor: 'pointer',
+                    background: isSelected ? 'var(--accent-soft)' : undefined,
+                    borderColor: isSelected ? 'var(--accent)' : undefined,
+                    borderWidth: isSelected ? '2px' : undefined,
+                  }}
+                  onClick={() => selectCampaign(c)}
+                >
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: isSelected ? 'var(--accent)' : 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: 16, filter: isSelected ? 'brightness(10)' : 'none' }}>📢</span>
                   </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isSelected ? 'var(--accent)' : 'var(--text)' }}>{c.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', display: 'flex', gap: 12 }}>
+                      <span>{c.budget}</span>
+                      <span>{c.bidding?.replace('MAXIMIZE_', 'Max ').replace('TARGET_', 'Target ').replace(/_/g, ' ')}</span>
+                    </div>
+                  </div>
+                  <span className={`tag ${statusColor[c.status] || 'tb'}`}>{c.status}</span>
                 </div>
-                <span className={`tag ${statusColor[c.status] || 'tb'}`}>{c.status}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
+      {/* Campaign data + review trigger */}
       {selected && (
         <div className="card card-gradient">
           <div className="ch">
             <div>
-              <div className="ct">{selected.name}</div>
+              <div className="ct" style={{ fontSize: 16 }}>{selected.name}</div>
               <div className="cs">
                 {fetching
-                  ? 'Loading campaign data...'
+                  ? '⏳ Loading campaign data...'
                   : campaignData
-                    ? `${campaignData.adGroups} ad groups · ${campaignData.keywords} keywords · ${campaignData.ads} ads · ${campaignData.searchTerms} search terms`
-                    : 'Select a campaign above'}
+                    ? 'Campaign data loaded — ready for AI review'
+                    : 'Error loading data'}
               </div>
             </div>
             <button
               className="btn bp"
               onClick={reviewCampaign}
               disabled={!campaignData || reviewing}
+              style={{ fontSize: 14, padding: '10px 20px' }}
             >
-              {reviewing ? <><span className="spin" /> Reviewing...</> : '🤖 Review with AI'}
+              {reviewing ? <><span className="spin" /> Analyzing...</> : '🤖 Review with AI Expert'}
             </button>
           </div>
 
           {fetching && (
-            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--muted)' }}>
-              <span className="spin-dark" /> Fetching ad groups, keywords, and ads...
+            <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted)' }}>
+              <span className="spin-dark" style={{ marginRight: 8 }} />
+              Fetching ad groups, keywords, ads, and search terms...
             </div>
           )}
 
           {campaignData && !fetching && (
-            <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-              <div className="stat-mini">
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{campaignData.adGroups}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Ad Groups</div>
-              </div>
-              <div className="stat-mini">
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{campaignData.keywords}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Keywords</div>
-              </div>
-              <div className="stat-mini">
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{campaignData.ads}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Ads</div>
-              </div>
-              <div className="stat-mini">
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{campaignData.searchTerms}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Search Terms</div>
-              </div>
-              <div className="stat-mini">
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{selected.budget}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Budget</div>
-              </div>
-              <div className="stat-mini">
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{selected.bidding}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Bidding</div>
-              </div>
+            <div className="g3" style={{ gap: 10 }}>
+              <StatCard label="Ad Groups" value={campaignData.adGroups} icon="📁" />
+              <StatCard label="Keywords" value={campaignData.keywords} icon="🔤" />
+              <StatCard label="Ads" value={campaignData.ads} icon="📝" />
+              <StatCard label="Search Terms" value={campaignData.searchTerms} sub="Last 30 days" icon="🔍" />
+              <StatCard label="Clicks (30d)" value={campaignData.totalClicks} sub={`$${campaignData.totalCost} spent`} icon="👆" />
+              {campaignData.avgQs ? (
+                <StatCard label="Avg Quality Score" value={campaignData.avgQs} sub={parseFloat(campaignData.avgQs) < 5 ? '⚠️ Below average' : '✅ Healthy'} icon="⭐" />
+              ) : (
+                <StatCard label="Conversions (30d)" value={campaignData.totalConv} icon="🎯" />
+              )}
             </div>
           )}
         </div>
       )}
 
+      {/* AI Review output */}
       {showResult && (
         <div className="card">
           <div className="ch">
-            <div><div className="ct">📋 AI Expert Review</div></div>
+            <div>
+              <div className="ct">📋 AI Expert Audit Report</div>
+              <div className="cs">{reviewing ? 'Analyzing your campaign...' : 'Review complete'}</div>
+            </div>
+            {!reviewing && text && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className="btn bs sm" onClick={() => { setText(''); setShowResult(false); setActions([]); }}>✕ Close</button>
+              </div>
+            )}
           </div>
           <AiOutput text={text} id="cr-o" />
         </div>
       )}
 
+      {/* Action checklist */}
       {actions.length > 0 && !reviewing && (
-        <div className="card">
+        <div className="card" style={{ borderColor: 'var(--accent-mid)', borderWidth: 2 }}>
           <div className="ch">
             <div>
-              <div className="ct">⚡ Recommended Actions</div>
-              <div className="cs">{checkedCount} of {actions.length} selected</div>
+              <div className="ct">⚡ Recommended Actions ({actions.length})</div>
+              <div className="cs">
+                {doneCount > 0 || failedCount > 0
+                  ? `${doneCount} applied, ${failedCount} failed, ${checkedCount} remaining`
+                  : `${checkedCount} of ${actions.length} selected`}
+              </div>
             </div>
-            <button
-              className="btn bp"
-              disabled={checkedCount === 0 || applying}
-              onClick={() => setConfirming(true)}
-            >
-              {applying ? <><span className="spin" /> Applying...</> : `Apply ${checkedCount} Changes`}
-            </button>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <button className="btn bs sm" onClick={() => selectAllActions(true)}>Select All</button>
+              <button className="btn bs sm" onClick={() => selectAllActions(false)}>Deselect</button>
+              <button
+                className="btn bp"
+                disabled={checkedCount === 0 || applying}
+                onClick={() => setConfirming(true)}
+              >
+                {applying ? <><span className="spin" /> Applying...</> : `Apply ${checkedCount} Changes`}
+              </button>
+            </div>
           </div>
 
           {confirming && (
-            <div className="al aw" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div className="al aw" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderWidth: 2 }}>
               <div>
-                <b>Confirm:</b> You are about to make <b>{checkedCount} changes</b> to your live Google Ads account. This will modify campaign data. Proceed?
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>⚠️ Confirm Changes</div>
+                <div>You are about to make <b>{checkedCount} changes</b> to your <b>live Google Ads account</b>. This will modify real campaign data and may affect ad delivery.</div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                <button className="btn bp sm" onClick={applyChanges}>Yes, Apply</button>
+                <button className="btn bp sm" onClick={applyChanges}>Yes, Apply All</button>
                 <button className="btn bs sm" onClick={() => setConfirming(false)}>Cancel</button>
               </div>
             </div>
           )}
 
-          <div style={{ marginTop: 8 }}>
-            {actions.map((a, i) => (
-              <div
-                key={i}
-                className="camp-row"
-                style={{
-                  opacity: a.status === 'done' ? 0.6 : 1,
-                  cursor: applying ? 'default' : 'pointer',
-                  background: a.status === 'failed' ? '#fef2f2' : a.status === 'done' ? '#f0fdf4' : undefined,
-                }}
-                onClick={() => !applying && toggleAction(i)}
-              >
-                <input
-                  type="checkbox"
-                  checked={a.checked}
-                  onChange={() => toggleAction(i)}
-                  disabled={applying || a.status === 'done'}
-                  style={{ marginRight: 8, cursor: 'pointer' }}
-                />
-                <span style={{ fontSize: 16, marginRight: 8 }}>{ACTION_ICONS[a.type] || '📌'}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {describeAction(a)}
-                    {a.status !== 'pending' && (
-                      <span style={{ marginLeft: 8 }}>{STATUS_LABELS[a.status]}</span>
-                    )}
+          <div style={{ marginTop: 4 }}>
+            {ACTION_ORDER.map((actionType) => {
+              const groupActions = actions.filter((a) => a.type === actionType);
+              if (groupActions.length === 0) return null;
+              const meta = ACTION_META[actionType];
+              return (
+                <div key={actionType} style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px', padding: '8px 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>{meta.icon}</span> {meta.group} ({groupActions.length})
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                    {a.reason}
-                    {a.status === 'failed' && a.error && (
-                      <span style={{ color: '#ef4444', marginLeft: 8 }}>Error: {a.error}</span>
-                    )}
-                  </div>
+                  {groupActions.map((a) => {
+                    const idx = actions.indexOf(a);
+                    const isDone = a.status === 'done';
+                    const isFailed = a.status === 'failed';
+                    const isExec = a.status === 'executing';
+                    return (
+                      <div
+                        key={idx}
+                        className="camp-row"
+                        style={{
+                          cursor: applying || isDone ? 'default' : 'pointer',
+                          opacity: isDone ? 0.6 : 1,
+                          background: isFailed ? 'var(--red-soft)' : isDone ? 'var(--green-soft)' : isExec ? 'var(--accent-soft)' : undefined,
+                          borderColor: isFailed ? 'var(--red)' : isDone ? '#b2eed9' : isExec ? 'var(--accent-mid)' : undefined,
+                        }}
+                        onClick={() => !applying && !isDone && toggleAction(idx)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={a.checked}
+                          onChange={() => toggleAction(idx)}
+                          disabled={applying || isDone}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ cursor: 'pointer', accentColor: 'var(--accent)', flexShrink: 0 }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600 }}>
+                            {describeAction(a)}
+                            {a.status !== 'pending' && <span style={{ marginLeft: 6 }}>{STATUS_ICON[a.status]}</span>}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{a.reason}</div>
+                          {isFailed && a.error && (
+                            <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 2 }}>Error: {a.error}</div>
+                          )}
+                        </div>
+                        <span className={`tag ${meta.color}`} style={{ fontSize: 10 }}>{meta.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-                <span className={`tag ${
-                  a.type === 'ADD_NEGATIVE' ? 'tr' :
-                  a.type === 'PAUSE_KEYWORD' || a.type === 'PAUSE_AD' ? 'ty' :
-                  a.type === 'ADD_KEYWORD' ? 'tg' :
-                  'tb'
-                }`} style={{ fontSize: 10 }}>{a.type.replace('_', ' ')}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {doneCount > 0 && !applying && (
+            <div className="al as" style={{ marginTop: 12, marginBottom: 0 }}>
+              ✅ {doneCount} change{doneCount > 1 ? 's' : ''} applied successfully.
+              {failedCount > 0 && ` ${failedCount} failed — check errors above.`}
+            </div>
+          )}
         </div>
       )}
     </>
+  );
+}
+
+function StatCard({ label, value, sub, icon }) {
+  return (
+    <div style={{
+      background: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: 12, padding: '14px 16px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      overflow: 'hidden', minWidth: 0,
+    }}>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+        {icon}
+      </div>
+      <div style={{ minWidth: 0, overflow: 'hidden' }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</div>
+        <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>{label}</div>
+        {sub && <div style={{ fontSize: 10, color: 'var(--text2)', marginTop: 1 }}>{sub}</div>}
+      </div>
+    </div>
   );
 }

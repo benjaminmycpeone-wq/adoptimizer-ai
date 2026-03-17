@@ -62,13 +62,13 @@ export async function sse(resp, onChunk) {
  * Call AI provider via proxy with SSE streaming.
  * Returns the full generated text.
  */
-export async function callAI(prompt, onToken) {
+export async function callAI(prompt, onToken, { maxTokens = 4000 } = {}) {
   const { aiKey, aiProv, aiMod } = useStore.getState();
   if (!aiKey) throw new Error('No AI key set — go to AI API Key in the sidebar');
 
   const payload = {
     model: aiMod,
-    max_tokens: 4000,
+    max_tokens: maxTokens,
     stream: true,
     messages: [{ role: 'user', content: prompt }],
   };

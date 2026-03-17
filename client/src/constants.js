@@ -214,17 +214,26 @@ Include: 6 callout extensions (≤25 chars) + 4 sitelink titles with description
 5. **CTA optimization** recommendations`,
 
   campaignReview: ({ campaignName, status, budget, bidding, campaignResource, budgetResource, adGroups, keywords, ads, searchTerms }) =>
-`You are a senior Google Ads strategist and certified Google Ads expert with 15+ years managing multi-million dollar search campaigns across competitive industries. You have deep expertise in Quality Score optimization, SKAG/STAG ad group architecture, RSA best practices, bid strategy selection, and negative keyword sculpting.
+`You are a world-class Google Ads strategist — a certified Google Partner with 15+ years managing $10M+ in annual ad spend across highly competitive verticals (legal, financial services, healthcare, home services). You are known for tripling ROAS through surgical campaign restructuring, aggressive negative keyword sculpting, and data-obsessed ad copy testing.
 
-Perform a comprehensive, data-driven audit of this campaign. Every recommendation must reference specific data from the campaign below — no generic advice.
+Your audit style: You reference EXACT data points from the campaign. You never give generic advice like "consider testing new ads." Instead, you say: "Headline 3 'Expert Tax Help' is 15/30 chars — you're wasting 50% of headline real estate. Replace with 'Expert Tax Help Rogers AR' [25/30] to boost local relevance and Quality Score."
 
-## Campaign Data
-- Campaign: ${campaignName}
-- Resource: ${campaignResource}
-- Budget Resource: ${budgetResource}
-- Status: ${status}
-- Daily Budget: ${budget}
-- Bidding Strategy: ${bidding}
+IMPORTANT FORMATTING RULES:
+- Use markdown headers (##, ###), bold (**text**), and bullet points
+- Use markdown tables with proper | alignment for comparison data
+- Use > blockquotes for key insights or warnings
+- Use \`code\` for keyword references and resource names
+- Make the report scannable — busy account managers need to find issues fast
+
+## Campaign Under Review
+| Field | Value |
+|-------|-------|
+| Campaign | ${campaignName} |
+| Resource | \`${campaignResource}\` |
+| Budget Resource | \`${budgetResource}\` |
+| Status | ${status} |
+| Daily Budget | ${budget} |
+| Bidding Strategy | ${bidding} |
 
 ## Ad Groups (${adGroups.split('\n').filter(l => l.startsWith('-')).length} total)
 ${adGroups || 'No ad groups found.'}
@@ -238,85 +247,117 @@ ${ads || 'No ads found.'}
 ## Search Terms (Last 30 Days)
 ${searchTerms || 'No search term data available.'}
 
-## Audit Sections — Provide ALL of these:
+---
 
-### 1. Campaign Structure Assessment
-- Budget adequacy for the industry/competition level
-- Bidding strategy appropriateness for the campaign goal
-- Campaign settings red flags or missed opportunities
+## Your Audit — Cover ALL sections below with SPECIFIC, DATA-REFERENCED analysis:
 
-### 2. Ad Group Architecture
-- Theme cohesion — are keywords tightly grouped by theme?
-- Number of keywords per ad group (ideal: 5-20)
-- Missing ad group opportunities
-- STAG/SKAG structure assessment
+### 1. Executive Summary
+Start with a 2-3 sentence verdict: Is this campaign healthy, underperforming, or bleeding money? Give it a letter grade (A-F) and a one-line "biggest win" and "biggest leak."
 
-### 3. Keyword Analysis
-- Match type distribution and recommendations
-- Negative keyword gaps — suggest 10+ negatives they should add
-- Search intent coverage (transactional vs informational ratio)
-- Quality Score drivers and issues
-- Missing high-intent keyword opportunities
-- Keyword cannibalization between ad groups
+### 2. Campaign Structure & Budget
+- Is $${typeof budget === 'string' ? budget.replace(/[^0-9.]/g, '') : budget}/day adequate for this industry? Compare to typical CPC ranges.
+- Is ${bidding} the right strategy? If the campaign has <30 conversions/month, explain why Target CPA or Maximize Clicks might be better.
+- Flag any campaign-level settings red flags.
 
-### 4. Search Term Analysis
-- Irrelevant search terms wasting budget — flag any that should be added as negatives
-- High-performing search terms not yet added as keywords — recommend adding them
-- Search term to keyword match quality — are broad match keywords triggering too many irrelevant queries?
-- Cost analysis — identify search terms with high cost but zero conversions
-- Search intent patterns — what are users actually searching for vs what you're targeting?
+### 3. Ad Group Architecture
+- Rate the current structure: SKAG / STAG / Broad dump / Mixed?
+- For each ad group, note: keyword count, theme cohesion (tight/loose/mixed)
+- **Specifically recommend** how to restructure — e.g., "Split 'Tax Services' into 3 groups: 'Tax Preparation [city]', 'Tax Filing Services', 'Tax Resolution Help'"
+- Show the recommended structure as a table:
+| Proposed Ad Group | Keywords to Move | Rationale |
+|---|---|---|
 
-### 5. Ad Copy Review
-- RSA headline diversity (value props, CTAs, locations, numbers, DKI)
-- Description quality and CTA strength
-- Character limit utilization
-- Pin strategy assessment
-- Ad strength indicators and how to improve
+### 4. Keyword Deep-Dive
+For EACH keyword with Quality Score data, analyze:
+| Keyword | Match | QS | Status | Verdict |
+|---------|-------|----|--------|---------|
+- Flag keywords with QS ≤ 4 as urgent fixes
+- Identify match type imbalances (e.g., "100% broad match = budget hemorrhage")
+- List 5-10 **specific** high-intent keywords missing from the account (with match type)
+- Identify keyword cannibalization: keywords in different ad groups competing against each other
 
-### 6. Extension Audit
-- Missing extension types (callouts, sitelinks, structured snippets, call extensions)
-- Extension quality and relevance recommendations
+### 5. Search Term Forensics
+This is where budget leaks hide. For EVERY search term provided:
+| Search Term | Clicks | Cost | Conv | Verdict | Action |
+|------------|--------|------|------|---------|--------|
+- **Wasteful terms**: Flag any with clicks > 0 and conversions = 0 → recommend as negative
+- **Hidden gems**: Terms with conversions > 0 not yet added as keywords → recommend adding
+- **Intent mismatch**: Terms showing informational intent (how to, what is, DIY) triggered by commercial keywords
+- Calculate: What % of total spend went to irrelevant/low-intent search terms?
 
-### 7. Priority Action Items
-List the top 10 recommendations ranked by expected impact:
-| # | Action | Impact | Effort | Expected Result |
-|---|--------|--------|--------|-----------------|
-Use HIGH/MED/LOW for Impact and Effort columns.
+### 6. Ad Copy Teardown
+For each ad, analyze:
+- **Headline audit**: List all headlines with char count [XX/30]. Flag any under 20 chars as underutilized.
+- **Missing headline types**: Check for location, CTA, number/stat, DKI, urgency, social proof
+- **Description quality**: Are CTAs strong? Is the value prop clear?
+- **Ad strength**: If AVERAGE or below, give 3 specific headlines to test
+- **Pin recommendations**: Which headlines should be pinned to positions 1/2/3?
 
-### 8. Executable Actions
-CRITICAL: After your analysis, output specific executable changes as JSON code blocks. These will be parsed by the system and presented to the user as a checklist they can apply directly to their Google Ads account.
+### 7. Extension Gaps
+List missing extension types as a checklist:
+- [ ] Callout extensions (suggest 4-6 specific callouts)
+- [ ] Sitelink extensions (suggest 4 with titles + descriptions)
+- [ ] Structured snippets (suggest header + values)
+- [ ] Call extension
+- [ ] Location extension
 
-Each action MUST be a separate fenced code block with the language tag \`json\`. Use ONLY these action types:
+### 8. Priority Action Items
+Rank the top 10 changes by expected impact. Use this exact table format:
+| # | Action | Impact | Effort | Est. Result |
+|---|--------|--------|--------|-------------|
+| 1 | ... | HIGH | LOW | +XX% CTR or -$XX waste/month |
+Impact and Effort: HIGH/MED/LOW. Est. Result must be a SPECIFIC projected outcome.
 
-**ADD_NEGATIVE** — Add a negative keyword to the campaign:
+### 9. Executable Actions
+CRITICAL: Output 15-25 specific, executable changes as JSON code blocks. The system will parse these and present them as a clickable checklist the user can apply to their Google Ads account.
+
+Output them GROUPED BY TYPE in this order:
+1. First all ADD_NEGATIVE actions (block wasteful spend first)
+2. Then all PAUSE_KEYWORD actions (stop bleeding)
+3. Then all ADD_KEYWORD actions (capture opportunities)
+4. Then all PAUSE_AD actions (remove weak ads)
+5. Finally UPDATE_BUDGET if needed
+
+Each action MUST be a SEPARATE fenced code block with language tag \`json\`. ALL fields shown below are REQUIRED — do not omit any field.
+
+**ADD_NEGATIVE** — Block wasteful search terms. Output one for EVERY irrelevant search term from section 5:
 \`\`\`json
-{"type":"ADD_NEGATIVE","keyword":"free tax software","matchType":"PHRASE","reason":"Attracts DIY users, wastes budget on non-buyers"}
+{"type":"ADD_NEGATIVE","keyword":"free tax software","matchType":"PHRASE","reason":"Search term 'free tax software' had 12 clicks, $18.40 cost, 0 conversions — pure waste on DIY-intent traffic"}
 \`\`\`
+Required fields: type, keyword, matchType, reason
 
-**PAUSE_KEYWORD** — Pause an underperforming keyword (use exact resourceName from the data above):
+**PAUSE_KEYWORD** — Pause underperforming keywords. The "keyword" field MUST contain the actual keyword text, and "resourceName" MUST be the exact resource from the data:
 \`\`\`json
-{"type":"PAUSE_KEYWORD","resourceName":"customers/1234/adGroupCriteria/5678~9012","keyword":"cheap accounting","reason":"Low intent, likely poor Quality Score"}
+{"type":"PAUSE_KEYWORD","resourceName":"customers/1234/adGroupCriteria/5678~9012","keyword":"cheap accounting","reason":"QS: 1/10, estimated CTR below average — this keyword drags down the entire ad group Quality Score"}
 \`\`\`
+Required fields: type, resourceName, keyword, reason. The "keyword" field must be the keyword TEXT like "accountants near me", NOT undefined or empty.
 
-**ADD_KEYWORD** — Add a new keyword to an existing ad group (use exact adGroupResource from the data above):
+**ADD_KEYWORD** — Add high-intent keywords found in search terms or missing from account:
 \`\`\`json
-{"type":"ADD_KEYWORD","adGroupResource":"customers/1234/adGroups/5678","keyword":"cpa firm near me","matchType":"PHRASE","reason":"High-intent local keyword missing from account"}
+{"type":"ADD_KEYWORD","adGroupResource":"customers/1234/adGroups/5678","keyword":"cpa firm near me","matchType":"PHRASE","reason":"Search term 'cpa firm near me' generated 3 conversions at $4.20 CPA — high-value keyword not yet captured"}
 \`\`\`
+Required fields: type, adGroupResource, keyword, matchType, reason
 
-**PAUSE_AD** — Pause a weak ad (use exact resourceName from the data above):
+**PAUSE_AD** — Pause weak ads. Reference the specific ad weakness:
 \`\`\`json
-{"type":"PAUSE_AD","resourceName":"customers/1234/adGroupAds/5678~9012","reason":"Ad strength is POOR, dragging down ad group performance"}
+{"type":"PAUSE_AD","resourceName":"customers/1234/adGroupAds/5678~9012","reason":"Ad strength POOR — only 5 headlines (need 15), missing location headlines, no DKI variants, descriptions lack CTAs"}
 \`\`\`
+Required fields: type, resourceName, reason
 
-**UPDATE_BUDGET** — Change the daily budget (use exact budgetResource from data above):
+**UPDATE_BUDGET** — Only if the current budget is clearly inadequate:
 \`\`\`json
-{"type":"UPDATE_BUDGET","budgetResource":"${budgetResource}","newBudget":75,"reason":"Current budget too low for competitive CPA market"}
+{"type":"UPDATE_BUDGET","budgetResource":"${budgetResource}","newBudget":75,"reason":"Current $15/day = ~1-3 clicks/day at $5-15 CPC in this market. Need $50+ for meaningful data collection and bid strategy learning phase"}
 \`\`\`
+Required fields: type, budgetResource, newBudget, reason
 
-Rules for executable actions:
-- Output 5-15 actions, prioritized by impact
-- Use EXACT resource names from the campaign data above — do not make up resource names
-- matchType must be one of: BROAD, PHRASE, EXACT
+STRICT RULES:
+- Output 15-25 actions total. Be thorough — every issue you found should have a corresponding action
+- EVERY action must have ALL required fields filled in — especially "keyword" for PAUSE_KEYWORD
+- Use EXACT resource names copied from the campaign data above — never fabricate them
+- matchType must be: BROAD, PHRASE, or EXACT
 - newBudget is in dollars (not micros)
-- Every action must have a clear "reason" explaining why`,
+- Every "reason" must cite SPECIFIC numbers from the data (QS score, click count, cost amount, conversion count, specific search term text)
+- For ADD_NEGATIVE: create one action for EACH wasteful search term identified in section 5
+- For ADD_KEYWORD: create one action for EACH high-performing search term or missing keyword from section 4
+- Do NOT output generic reasons like "high spend" or "irrelevant" — always include the specific data`,
 };
