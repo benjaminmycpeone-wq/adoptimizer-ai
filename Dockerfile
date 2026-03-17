@@ -4,6 +4,7 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
 COPY client/ ./
+ARG CACHEBUST=1
 RUN npm run build
 
 # Stage 2: Python runtime with Playwright
