@@ -254,14 +254,18 @@ export default function CampaignReview() {
           }],
         });
       case 'ADD_KEYWORD':
-        return gads('googleAds:mutate', {
-          mutateOperations: [{
-            adGroupCriterionOperation: {
-              create: {
-                adGroup: action.adGroupResource,
-                status: 'ENABLED',
-                keyword: { text: action.keyword, matchType: action.matchType || 'PHRASE' },
-              },
+        console.log('ADD_KEYWORD payload:', JSON.stringify({
+          adGroup: action.adGroupResource,
+          keyword: action.keyword,
+          matchType: action.matchType,
+        }));
+        return gads('adGroupCriteria:mutate', {
+          operations: [{
+            create: {
+              adGroup: action.adGroupResource,
+              status: 'ENABLED',
+              keyword: { text: action.keyword, matchType: action.matchType || 'PHRASE' },
+              cpcBidMicros: '1000000',
             },
           }],
         });

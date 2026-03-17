@@ -55,6 +55,7 @@ export async function gads(endpoint, body, method = 'POST', { customerId } = {})
   });
   const d = await r.json();
   if (!r.ok) {
+    console.error('Google Ads API error response:', JSON.stringify(d, null, 2));
     // Extract the most specific error message available from Google Ads API response
     const detail = d?.error?.details?.[0]?.errors?.[0];
     const m = detail
