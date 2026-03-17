@@ -4,7 +4,8 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
 COPY client/ ./
-RUN echo "build-v2-$(date +%s)" > .buildstamp && npm run build
+# v3 - force rebuild 2026-03-17
+RUN npm run build
 
 # Stage 2: Python runtime with Playwright
 FROM python:3.12-slim
