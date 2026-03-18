@@ -17,9 +17,9 @@ export default function Keywords() {
     setLoading(true);
     setText('');
     setShowResult(true);
-    const prompt = PROMPTS.keywordResearch({ count, niche, focus, matchType });
+    const { system, user } = PROMPTS.keywordResearch({ count, niche, focus, matchType });
     try {
-      const result = await callAI(prompt, (_, full) => setText(full));
+      const result = await callAI(user, (_, full) => setText(full), { system });
       setText(result);
     } catch (e) { setText('❌ ' + e.message); }
     setLoading(false);

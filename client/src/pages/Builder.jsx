@@ -39,12 +39,12 @@ export default function Builder() {
   const genKw = async () => {
     setKwLoading(true);
     setKwText('');
-    const prompt = PROMPTS.keywords({
+    const { system, user } = PROMPTS.keywords({
       count: kwCount, name: b.name, loc: b.loc, cat: b.cat,
       svc: b.svc, aud: b.aud, usp: b.usp, matchType,
     });
     try {
-      const result = await callAI(prompt, (_, full) => setKwText(full));
+      const result = await callAI(user, (_, full) => setKwText(full), { system });
       setKwText(result);
       incStat('k', parseInt(kwCount));
       log('Keywords generated: ' + b.name);
@@ -55,12 +55,12 @@ export default function Builder() {
   const genAd = async () => {
     setAdLoading(true);
     setAdText('');
-    const prompt = PROMPTS.adCopy({
+    const { system, user } = PROMPTS.adCopy({
       format: adFormat, name: b.name, loc: b.loc,
       svc: b.svc, usp: b.usp, tone: adTone,
     });
     try {
-      const result = await callAI(prompt, (_, full) => setAdText(full));
+      const result = await callAI(user, (_, full) => setAdText(full), { system });
       setAdText(result);
       incStat('a', 3);
       log('Ad copy: ' + b.name);
@@ -71,9 +71,9 @@ export default function Builder() {
   const genNeg = async () => {
     setNegLoading(true);
     setNegText('');
-    const prompt = PROMPTS.negatives({ cat: b.cat, svc: b.svc, loc: b.loc });
+    const { system, user } = PROMPTS.negatives({ cat: b.cat, svc: b.svc, loc: b.loc });
     try {
-      const result = await callAI(prompt, (_, full) => setNegText(full));
+      const result = await callAI(user, (_, full) => setNegText(full), { system });
       setNegText(result);
     } catch (e) { setNegText('❌ ' + e.message); }
     setNegLoading(false);

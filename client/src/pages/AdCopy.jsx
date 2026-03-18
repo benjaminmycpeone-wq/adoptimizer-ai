@@ -19,9 +19,9 @@ export default function AdCopy() {
     setLoading(true);
     setText('');
     setShowResult(true);
-    const prompt = PROMPTS.adCopyStandalone({ format, name, service, location, usp, tone });
+    const { system, user } = PROMPTS.adCopyStandalone({ format, name, service, location, usp, tone });
     try {
-      const result = await callAI(prompt, (_, full) => setText(full));
+      const result = await callAI(user, (_, full) => setText(full), { system });
       setText(result);
     } catch (e) { setText('❌ ' + e.message); }
     setLoading(false);

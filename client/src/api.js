@@ -62,7 +62,7 @@ export async function sse(resp, onChunk) {
  * Call AI provider via proxy with SSE streaming.
  * Returns the full generated text.
  */
-export async function callAI(prompt, onToken, { maxTokens = 4000 } = {}) {
+export async function callAI(prompt, onToken, { maxTokens = 4000, system } = {}) {
   const { aiKey, aiProv, aiMod } = useStore.getState();
   if (!aiKey) throw new Error('No AI key set — go to AI API Key in the sidebar');
 
@@ -72,6 +72,14 @@ export async function callAI(prompt, onToken, { maxTokens = 4000 } = {}) {
     stream: true,
     messages: [{ role: 'user', content: prompt }],
   };
+
+  // Anthropic supports system as a top-level field for much better results
+  if (system && aiProv === 'anthropic') {
+    payload.system = system;
+  } else if (system) {
+    // For OpenAI-compatible providers, prepend as system message
+    payload.messages.unshift({ role: 'system', content: system });
+  }
 
   const r = await fetch(`${API_BASE}/ai-proxy`, {
     method: 'POST',

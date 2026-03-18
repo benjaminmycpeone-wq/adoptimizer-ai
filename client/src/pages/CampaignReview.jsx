@@ -205,7 +205,7 @@ export default function CampaignReview() {
     setShowResult(true);
     setActions([]);
     try {
-      const prompt = PROMPTS.campaignReview({
+      const { system, user } = PROMPTS.campaignReview({
         campaignName: selected.name,
         status: selected.status,
         budget: selected.budget,
@@ -217,7 +217,7 @@ export default function CampaignReview() {
         ads: campaignData.adsFormatted,
         searchTerms: campaignData.searchTermsFormatted,
       });
-      const result = await callAI(prompt, (_, full) => setText(full), { maxTokens: 8000 });
+      const result = await callAI(user, (_, full) => setText(full), { maxTokens: 8000, system });
       setText(result);
       log(`AI review complete: ${selected.name}`);
     } catch (e) {
