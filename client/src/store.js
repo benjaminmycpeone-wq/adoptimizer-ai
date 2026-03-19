@@ -62,7 +62,9 @@ const useStore = create((set, get) => ({
   setAiMod: (mod) => { set({ aiMod: mod }); savePersisted({ ...get(), aiMod: mod }); },
 
   setCr: (cr) => {
-    const merged = { ...get().cr, ...cr };
+    // Trim all credential values to prevent whitespace issues in API headers
+    const trimmed = Object.fromEntries(Object.entries(cr).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v]));
+    const merged = { ...get().cr, ...trimmed };
     set({ cr: merged });
     savePersisted({ ...get(), cr: merged });
   },

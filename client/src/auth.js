@@ -34,8 +34,9 @@ export async function getToken() {
 export async function gads(endpoint, body, method = 'POST', { customerId } = {}) {
   const tok = await getToken();
   const { cr } = useStore.getState();
-  const cid = customerId || cr.cu || cr.mcc;
+  const cid = (customerId || cr.cu || cr.mcc || '').trim().replace(/-/g, '');
   if (!cid) throw new Error('Customer ID not set');
+  const mcc = (cr.mcc || '').trim().replace(/-/g, '');
 
   const url = `https://googleads.googleapis.com/v23/customers/${cid}/${endpoint}`;
   const r = await fetch('/api/google/ads', {
@@ -46,9 +47,9 @@ export async function gads(endpoint, body, method = 'POST', { customerId } = {})
       method,
       headers: {
         'Authorization': `Bearer ${tok}`,
-        'developer-token': cr.dt,
+        'developer-token': (cr.dt || '').trim(),
         'Content-Type': 'application/json',
-        'login-customer-id': cr.mcc,
+        'login-customer-id': mcc,
       },
       body: body || undefined,
     }),
