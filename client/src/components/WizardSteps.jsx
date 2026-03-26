@@ -1,8 +1,7 @@
 const STEPS = [
-  { num: 1, label: 'Business' },
-  { num: 2, label: 'Campaign' },
-  { num: 3, label: 'AI Generate' },
-  { num: 4, label: 'Launch' },
+  { num: 1, label: 'Setup' },
+  { num: 2, label: 'AI Strategy' },
+  { num: 3, label: 'Launch' },
 ];
 
 export default function WizardSteps({ current, onStep }) {

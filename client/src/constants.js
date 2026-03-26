@@ -55,10 +55,109 @@ Your analysis style:
 
 You output clean, well-structured markdown with tables, bold emphasis on key metrics, and clear section headers.`;
 
+// ── Budget & Bidding Suggestions by Category ──
+export const BUDGET_SUGGESTIONS = {
+  'Accounting & CPA Firm': { budget: 50, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$20-45', note: 'CPA firms see $20-45 CPA typically. Start conservative.' },
+  'Tax Preparation': { budget: 60, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$15-35', note: 'Seasonal — ramp up Jan-Apr, reduce May-Dec.' },
+  'Bookkeeping': { budget: 40, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$18-40', note: 'Lower CPC than tax, steady year-round demand.' },
+  'Financial Advisory': { budget: 75, bidding: 'TARGET_CPA', cpa: '$40-80', note: 'High client value justifies higher CPA.' },
+  'Law Firm': { budget: 100, bidding: 'TARGET_CPA', cpa: '$50-150', note: 'Legal keywords are very competitive. High CPC.' },
+  'Medical Practice': { budget: 75, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$30-70', note: 'Location targeting critical for medical.' },
+  'Dental Office': { budget: 60, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$25-60', note: 'Strong "near me" intent. Focus on local.' },
+  'Insurance Agency': { budget: 80, bidding: 'TARGET_CPA', cpa: '$35-80', note: 'Competitive vertical. Niche down by product.' },
+  'Real Estate Agency': { budget: 80, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$40-100', note: 'Location + property type targeting key.' },
+  'Home Services': { budget: 50, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$20-50', note: 'Strong local intent. Emergency keywords convert well.' },
+  'Restaurant': { budget: 30, bidding: 'MAXIMIZE_CLICKS', cpa: '$5-15', note: 'Lower CPC. Focus on location + cuisine type.' },
+  'Other': { budget: 50, bidding: 'MAXIMIZE_CONVERSIONS', cpa: '$20-60', note: 'Start with maximize conversions, optimize from data.' },
+};
+
 // ── Expert AI Prompt Templates ──
 // Each prompt returns { system, user } for optimal Claude performance
 
 export const PROMPTS = {
+  // ── One-Shot Campaign Strategist ──
+  // Takes full scraper output and produces a complete campaign plan
+  campaignStrategy: (scrapeData) => ({
+    system: `You are an elite Google Ads campaign architect. You build complete, launch-ready Google Ads campaigns from website analysis data. You specialize in local service businesses.
+
+Your output is a COMPLETE campaign plan that can be directly launched in Google Ads. Every piece of data must be actionable — no filler, no generic advice.
+
+CRITICAL RULES:
+- Headlines MUST be ≤30 characters each. Count carefully.
+- Descriptions MUST be ≤90 characters each. Count carefully.
+- Keywords must be relevant, specific, and use proper match type notation
+- Output structured JSON blocks for each component so the frontend can parse them
+- Base everything on the ACTUAL website data provided — don't invent services or locations not found on the site
+- Think about what a real customer would search to find this specific business`,
+
+    user: `Analyze this business website data and create a COMPLETE Google Ads campaign plan.
+
+## Website Analysis Data
+- **Business**: ${scrapeData.firmName}
+- **Category**: ${scrapeData.category}
+- **Website**: ${scrapeData.websiteUrl}
+- **Locations**: ${(scrapeData.locations || []).join(', ') || 'Not detected'}
+- **Services Found**: ${(scrapeData.services || []).join(', ')}
+- **Target Audience**: ${(scrapeData.targetAudience || []).join(', ')}
+- **USPs/Differentiators**: ${(scrapeData.usps || []).join(', ')}
+- **Competitive Angles**: ${(scrapeData.competitiveAngles || []).join(', ')}
+- **CTAs on Site**: ${(scrapeData.ctaPatterns || []).join(', ') || 'None detected'}
+- **Pricing Signals**: ${(scrapeData.pricingSignals || []).join(', ') || 'None detected'}
+- **Landing Page Quality**: ${scrapeData.landingPageQuality?.score || '?'}/10 (Form: ${scrapeData.landingPageQuality?.hasForm ? 'Yes' : 'No'}, Phone: ${scrapeData.landingPageQuality?.hasPhone ? 'Yes' : 'No'}, CTA: ${scrapeData.landingPageQuality?.hasCTA ? 'Yes' : 'No'})
+- **Business Summary**: ${scrapeData.summary || 'N/A'}
+
+## Page Content (for keyword ideas)
+${(scrapeData.headings || []).map(h => `- ${h}`).join('\n')}
+
+${(scrapeData.rawText || '').slice(0, 3000)}
+
+---
+
+## OUTPUT FORMAT — Follow this EXACTLY
+
+### 1. Campaign Strategy
+Write 2-3 sentences about the recommended approach.
+
+Then output the campaign settings as JSON:
+\`\`\`json
+{"type":"CAMPAIGN_SETTINGS","campaignName":"...","dailyBudget":50,"biddingStrategy":"MAXIMIZE_CONVERSIONS","locations":["City, ST"],"category":"..."}
+\`\`\`
+
+### 2. Ad Groups & Keywords
+Create 3-6 tightly-themed ad groups. For EACH ad group, output:
+
+\`\`\`json
+{"type":"AD_GROUP","name":"Ad Group Name","theme":"what this group targets","keywords":[{"text":"keyword here","matchType":"PHRASE"},{"text":"another keyword","matchType":"EXACT"}]}
+\`\`\`
+
+Include 8-15 keywords per group. Use PHRASE for most, EXACT for high-intent, BROAD for discovery.
+
+### 3. Ad Copy (per ad group)
+For EACH ad group, output ONE ad copy block:
+
+\`\`\`json
+{"type":"AD_COPY","adGroup":"Ad Group Name","headlines":["Headline 1","Headline 2","...up to 15"],"descriptions":["Description 1 up to 90 chars","Description 2","Description 3","Description 4"]}
+\`\`\`
+
+Headlines MUST be ≤30 chars. Descriptions MUST be ≤90 chars. Include location, CTA, USP variety.
+
+### 4. Negative Keywords
+Output ONE block with all campaign-level negatives:
+
+\`\`\`json
+{"type":"NEGATIVES","keywords":[{"text":"negative term","matchType":"PHRASE"},{"text":"another","matchType":"EXACT"}]}
+\`\`\`
+
+Include 30-60 negatives covering: jobs/careers, DIY, software, academic, unrelated services, low-intent.
+
+### 5. Extensions
+\`\`\`json
+{"type":"EXTENSIONS","callouts":["Callout 1","Callout 2","...6 total"],"sitelinks":[{"title":"Sitelink Title","description":"Description text"}],"snippets":["Snippet 1","Snippet 2","...4 total"]}
+\`\`\`
+
+### 6. Budget & Bidding Rationale
+Explain why you chose this budget and bidding strategy. Include expected CPA range.`
+  }),
   keywords: ({ count, name, loc, cat, svc, aud, usp, matchType }) => ({
     system: GOOGLE_ADS_EXPERT_SYSTEM,
     user: `Generate ${count} high-performance Google Ads keywords for this business. Think step by step about what this business's ideal customer would search.
