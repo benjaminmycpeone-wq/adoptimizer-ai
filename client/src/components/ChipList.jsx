@@ -14,7 +14,14 @@ export default function ChipList({ items: initialItems, onChange }) {
       {items.map((item, i) => (
         <div key={i} className="chip">
           <span>{item}</span>
-          <span className="x" onClick={() => remove(i)}>×</span>
+          <span
+            className="x"
+            role="button"
+            tabIndex={0}
+            aria-label={`Remove ${item}`}
+            onClick={() => remove(i)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && remove(i)}
+          >×</span>
         </div>
       ))}
     </div>

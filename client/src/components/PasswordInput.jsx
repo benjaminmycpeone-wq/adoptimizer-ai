@@ -13,7 +13,12 @@ export default function PasswordInput({ id, value, onChange, placeholder, style 
         placeholder={placeholder}
         style={style}
       />
-      <button className="ct2" onClick={() => setVisible(!visible)}>
+      <button
+        className="ct2"
+        onClick={() => setVisible(!visible)}
+        aria-label={visible ? 'Hide password' : 'Show password'}
+        type="button"
+      >
         {visible ? 'Hide' : 'Show'}
       </button>
     </div>

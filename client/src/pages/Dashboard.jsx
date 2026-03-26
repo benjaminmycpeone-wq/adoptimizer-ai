@@ -34,19 +34,19 @@ export default function Dashboard() {
         <div className="card">
           <div className="ch"><div className="ct">🚀 3-Step Workflow</div></div>
           <div className="qa">
-            <div className="qa-item" onClick={() => navigate('/scraper')}>
+            <div className="qa-item" role="button" tabIndex={0} onClick={() => navigate('/scraper')} onKeyDown={(e) => e.key === 'Enter' && navigate('/scraper')}>
               <div className="qa-num">1</div>
               <div className="qa-text"><h4>Scrape Client Site</h4><p>Auto-detect services, USPs & locations</p></div>
             </div>
-            <div className="qa-item" onClick={() => navigate('/builder')}>
+            <div className="qa-item" role="button" tabIndex={0} onClick={() => navigate('/builder')} onKeyDown={(e) => e.key === 'Enter' && navigate('/builder')}>
               <div className="qa-num">2</div>
               <div className="qa-text"><h4>Build Campaign</h4><p>AI keywords, ad copy & settings</p></div>
             </div>
-            <div className="qa-item" onClick={() => navigate('/api-key')}>
+            <div className="qa-item" role="button" tabIndex={0} onClick={() => navigate('/api-key')} onKeyDown={(e) => e.key === 'Enter' && navigate('/api-key')}>
               <div className="qa-num" style={{ background: 'var(--muted)' }}>A</div>
               <div className="qa-text"><h4>Set AI Key</h4><p>Anthropic, OpenAI or OpenRouter</p></div>
             </div>
-            <div className="qa-item" onClick={() => navigate('/credentials')}>
+            <div className="qa-item" role="button" tabIndex={0} onClick={() => navigate('/credentials')} onKeyDown={(e) => e.key === 'Enter' && navigate('/credentials')}>
               <div className="qa-num" style={{ background: 'var(--muted)' }}>B</div>
               <div className="qa-text"><h4>Google Ads Creds</h4><p>Dev token, OAuth & refresh token</p></div>
             </div>
@@ -57,7 +57,9 @@ export default function Dashboard() {
           <div className="ch"><div className="ct">🕐 Recent Activity</div></div>
           {acts.length === 0 ? (
             <div style={{ color: 'var(--muted)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>
-              No activity yet.
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>No activity yet</div>
+              <div style={{ fontSize: 12 }}>Start by scraping a client website or setting up your AI key</div>
             </div>
           ) : (
             acts.slice(0, 8).map((a, i) => (

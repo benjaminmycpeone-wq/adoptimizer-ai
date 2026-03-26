@@ -460,7 +460,7 @@ export default function Builder() {
               <button className="btn bp" onClick={genKw} disabled={kwLoading} style={{ marginBottom: 12 }}>
                 {kwLoading ? <><span className="spin" /> Generating…</> : '✨ Generate Keywords'}
               </button>
-              <AiOutput text={kwText} id="kw-o" />
+              <AiOutput text={kwText} id="kw-o" streaming={kwLoading} />
             </div>
 
             {/* Ad Copy tab */}
@@ -484,7 +484,7 @@ export default function Builder() {
               <button className="btn bp" onClick={genAd} disabled={adLoading} style={{ marginBottom: 12 }}>
                 {adLoading ? <><span className="spin" /> Generating…</> : '✨ Generate Ad Copy'}
               </button>
-              <AiOutput text={adText} id="ad-o" />
+              <AiOutput text={adText} id="ad-o" streaming={adLoading} />
             </div>
 
             {/* Negatives tab */}
@@ -492,7 +492,7 @@ export default function Builder() {
               <button className="btn bp" onClick={genNeg} disabled={negLoading} style={{ marginBottom: 12 }}>
                 {negLoading ? <><span className="spin" /> Generating…</> : '✨ Generate Negative Keywords'}
               </button>
-              <AiOutput text={negText} id="neg-o" />
+              <AiOutput text={negText} id="neg-o" streaming={negLoading} />
             </div>
           </TabPanel>
 

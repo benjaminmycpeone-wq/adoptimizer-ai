@@ -34,7 +34,7 @@ export default function Scraper() {
   }, [setScraperOnline]);
 
   const scrape = async () => {
-    if (!url.trim()) { alert('Enter a URL'); return; }
+    if (!url.trim()) { useStore.getState().addToast('Enter a URL first', 'aw'); return; }
     setLoading(true);
     setError(null);
     try {

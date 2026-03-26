@@ -14,7 +14,12 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    CORS(app)
+    CORS(app, origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:5055",
+        "https://adoptimizer-ai-production.up.railway.app",
+    ])
 
     # Initialize database
     init_db(app)
@@ -27,6 +32,14 @@ def create_app():
     app.register_blueprint(scraper_bp)
     app.register_blueprint(ai_bp)
     app.register_blueprint(google_ads_bp)
+
+    # Security headers
+    @app.after_request
+    def security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
 
     # Health check
     @app.route("/health", methods=["GET"])

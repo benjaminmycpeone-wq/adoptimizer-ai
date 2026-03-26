@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AiOutput from '../components/AiOutput';
 import { callAI } from '../api';
 import { PROMPTS } from '../constants';
+import useStore from '../store';
 
 export default function AdCopy() {
   const [name, setName] = useState('');
@@ -15,7 +16,7 @@ export default function AdCopy() {
   const [showResult, setShowResult] = useState(false);
 
   const generate = async () => {
-    if (!name || !service) { alert('Enter business name and service'); return; }
+    if (!name || !service) { useStore.getState().addToast('Enter business name and service', 'aw'); return; }
     setLoading(true);
     setText('');
     setShowResult(true);
@@ -62,7 +63,7 @@ export default function AdCopy() {
       {showResult && (
         <div className="card">
           <div className="ch"><div className="ct">Generated Copy</div></div>
-          <AiOutput text={text} id="ac-o" />
+          <AiOutput text={text} id="ac-o" streaming={loading} />
         </div>
       )}
     </>

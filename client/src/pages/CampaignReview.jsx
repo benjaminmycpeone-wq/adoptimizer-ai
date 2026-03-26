@@ -427,7 +427,7 @@ export default function CampaignReview() {
               </div>
             )}
           </div>
-          <AiOutput text={text} id="cr-o" />
+          <AiOutput text={text} id="cr-o" streaming={reviewing} />
         </div>
       )}
 

@@ -56,6 +56,12 @@ const useStore = create((set, get) => ({
   // Current campaign ID (for persistence)
   currentCampaignId: null,
 
+  // Toast notifications
+  toasts: [],
+
+  // Mobile sidebar
+  sidebarOpen: false,
+
   // Actions
   setAiKey: (key) => { set({ aiKey: key }); savePersisted({ ...get(), aiKey: key }); },
   setAiProv: (prov) => { set({ aiProv: prov }); savePersisted({ ...get(), aiProv: prov }); },
@@ -85,6 +91,16 @@ const useStore = create((set, get) => ({
   })),
 
   setCurrentCampaignId: (id) => set({ currentCampaignId: id }),
+
+  addToast: (msg, type = 'ai') => {
+    const id = Date.now() + Math.random();
+    set((s) => ({ toasts: [...s.toasts, { id, msg, type }].slice(-3) }));
+    setTimeout(() => get().removeToast(id), 4500);
+  },
+  removeToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+
+  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  closeSidebar: () => set({ sidebarOpen: false }),
 }));
 
 export default useStore;

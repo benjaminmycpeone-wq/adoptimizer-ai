@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import useStore from '../store';
 
 const NAV_ITEMS = [
@@ -21,43 +21,49 @@ export default function Sidebar() {
   const aiKey = useStore((s) => s.aiKey);
   const cr = useStore((s) => s.cr);
   const scraperOnline = useStore((s) => s.scraperOnline);
+  const sidebarOpen = useStore((s) => s.sidebarOpen);
+  const closeSidebar = useStore((s) => s.closeSidebar);
 
   return (
-    <aside className="sidebar">
-      <div className="logo">
-        <h1>⚡ AdOptimizer AI</h1>
-        <p>Google Ads Campaign Builder</p>
-      </div>
+    <>
+      {sidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
+      <aside className={`sidebar${sidebarOpen ? ' open' : ''}`} role="navigation" aria-label="Main navigation">
+        <div className="logo">
+          <h1>⚡ AdOptimizer AI</h1>
+          <p>Google Ads Campaign Builder</p>
+        </div>
 
-      {NAV_ITEMS.map((item, i) =>
-        item.section ? (
-          <div key={i} className="ns" style={item.style}>{item.section}</div>
-        ) : (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `ni${isActive ? ' active' : ''}`}
-            end={item.path === '/'}
-          >
-            <span className="ico">{item.icon}</span> {item.label}
-          </NavLink>
-        )
-      )}
+        {NAV_ITEMS.map((item, i) =>
+          item.section ? (
+            <div key={i} className="ns" style={item.style}>{item.section}</div>
+          ) : (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `ni${isActive ? ' active' : ''}`}
+              end={item.path === '/'}
+              onClick={closeSidebar}
+            >
+              <span className="ico">{item.icon}</span> {item.label}
+            </NavLink>
+          )
+        )}
 
-      <div className="sf">
-        <div className="status-row">
-          <span className={`dot ${aiKey ? 'on' : 'off'}`} />
-          <span>{aiKey ? `AI: ${aiProv}` : 'AI: not set'}</span>
+        <div className="sf">
+          <div className="status-row">
+            <span className={`dot ${aiKey ? 'on' : 'off'}`} aria-label={aiKey ? 'AI configured' : 'AI not configured'} />
+            <span>{aiKey ? `AI: ${aiProv}` : 'AI: not set'}</span>
+          </div>
+          <div className="status-row">
+            <span className={`dot ${cr.dt ? 'on' : 'off'}`} aria-label={cr.dt ? 'Google Ads configured' : 'Google Ads not configured'} />
+            <span>{cr.dt ? 'Google Ads: set' : 'Google Ads: not set'}</span>
+          </div>
+          <div className="status-row">
+            <span className={`dot ${scraperOnline ? 'on' : 'off'}`} aria-label={scraperOnline ? 'Scraper online' : 'Scraper offline'} />
+            <span>{scraperOnline ? 'Scraper online' : 'Scraper offline'}</span>
+          </div>
         </div>
-        <div className="status-row">
-          <span className={`dot ${cr.dt ? 'on' : 'off'}`} />
-          <span>{cr.dt ? 'Google Ads: set' : 'Google Ads: not set'}</span>
-        </div>
-        <div className="status-row">
-          <span className={`dot ${scraperOnline ? 'on' : 'off'}`} />
-          <span>{scraperOnline ? 'Scraper online' : 'Scraper offline'}</span>
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

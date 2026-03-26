@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AiOutput from '../components/AiOutput';
 import { callAI } from '../api';
 import { PROMPTS } from '../constants';
+import useStore from '../store';
 
 export default function Keywords() {
   const [niche, setNiche] = useState('');
@@ -13,7 +14,7 @@ export default function Keywords() {
   const [showResult, setShowResult] = useState(false);
 
   const research = async () => {
-    if (!niche) { alert('Enter a business or niche'); return; }
+    if (!niche) { useStore.getState().addToast('Enter a business or niche', 'aw'); return; }
     setLoading(true);
     setText('');
     setShowResult(true);
@@ -54,7 +55,7 @@ export default function Keywords() {
       {showResult && (
         <div className="card">
           <div className="ch"><div className="ct">Results</div></div>
-          <AiOutput text={text} id="kp-o" />
+          <AiOutput text={text} id="kp-o" streaming={loading} />
         </div>
       )}
     </>
