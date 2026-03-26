@@ -105,13 +105,12 @@ export default function Builder() {
       const blocks = parsePlanBlocks(result);
       const finalPlan = buildPlanFromBlocks(blocks);
       setPlan(finalPlan);
-      // Auto-fill campaign settings from AI recommendation
+      // Auto-fill campaign settings from AI — but NEVER override user-set budget/bidding
       if (finalPlan.settings) {
         const s = finalPlan.settings;
         setBuilder({
           campaignName: s.campaignName || b.campaignName,
-          budget: s.dailyBudget || b.budget,
-          bidding: s.biddingStrategy || b.bidding,
+          // Only fill locations/name — keep user's budget and bidding choices
           targetLocations: (s.locations || []).join(', ') || b.targetLocations,
         });
       }
@@ -221,7 +220,7 @@ export default function Builder() {
       // 1. Create budget
       setLaunchStatus({ type: 'ai', msg: '⏳ Creating budget ($' + budget + '/day)…' });
       const br = await gads('campaignBudgets:mutate', {
-        operations: [{ create: { name: `Budget-${name}-${Date.now()}`, amountMicros: String(Math.round(budget * 1e6)), deliveryMethod: 'STANDARD' } }],
+        operations: [{ create: { name: `Budget-${name}-${Date.now()}`, amountMicros: String(Math.round(budget * 1e6)), deliveryMethod: 'STANDARD', explicitlyShared: false } }],
       });
       const budRN = br.results?.[0]?.resourceName;
       if (!budRN) throw new Error('Budget creation failed');
