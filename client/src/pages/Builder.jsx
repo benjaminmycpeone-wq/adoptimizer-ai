@@ -217,23 +217,49 @@ export default function Builder() {
       const budget = parseFloat(b.budget) || 50;
       const bidding = b.bidding;
 
-      // 1. Create budget
-      setLaunchStatus({ type: 'ai', msg: '⏳ Creating budget ($' + budget + '/day)…' });
-      const br = await gads('campaignBudgets:mutate', {
-        operations: [{ create: { name: `Budget-${name}-${Date.now()}`, amountMicros: String(Math.round(budget * 1e6)), deliveryMethod: 'STANDARD', explicitlyShared: false } }],
-      });
-      const budRN = br.results?.[0]?.resourceName;
-      if (!budRN) throw new Error('Budget creation failed');
+      // 1+2. Create budget + campaign atomically via googleAds:mutate with temporary IDs
+      setLaunchStatus({ type: 'ai', msg: '⏳ Creating budget ($' + budget + '/day) & campaign…' });
+      const cid = (useStore.getState().cr.cu || useStore.getState().cr.mcc || '').trim().replace(/-/g, '');
+      const tempBudgetId = '-1';
+      const tempBudgetRN = `customers/${cid}/campaignBudgets/${tempBudgetId}`;
+      const campaignBody = {
+        name,
+        status: 'PAUSED',
+        advertisingChannelType: 'SEARCH',
+        campaignBudget: tempBudgetRN,
+        networkSettings: { targetGoogleSearch: true, targetSearchNetwork: true, targetContentNetwork: false },
+      };
+      if (bidding === 'MAXIMIZE_CONVERSIONS') campaignBody.maximizeConversions = {};
+      else if (bidding === 'MAXIMIZE_CLICKS') campaignBody.maximizeClicks = {};
+      else if (bidding === 'MANUAL_CPC') campaignBody.manualCpc = { enhancedCpcEnabled: true };
+      else if (bidding === 'TARGET_CPA') campaignBody.targetCpa = { targetCpaMicros: String(Math.round((parseFloat(b.targetCpa) || 5) * 1e6)) };
 
-      // 2. Create campaign
-      setLaunchStatus({ type: 'ai', msg: '⏳ Creating campaign…' });
-      const cb = { name, status: 'PAUSED', advertisingChannelType: 'SEARCH', campaignBudget: budRN, networkSettings: { targetGoogleSearch: true, targetSearchNetwork: true, targetContentNetwork: false } };
-      if (bidding === 'MAXIMIZE_CONVERSIONS') cb.maximizeConversions = {};
-      else if (bidding === 'MAXIMIZE_CLICKS') cb.maximizeClicks = {};
-      else if (bidding === 'MANUAL_CPC') cb.manualCpc = { enhancedCpcEnabled: true };
-      else if (bidding === 'TARGET_CPA') cb.targetCpa = { targetCpaMicros: String(Math.round((parseFloat(b.targetCpa) || 5) * 1e6)) };
-      const cr = await gads('campaigns:mutate', { operations: [{ create: cb }] });
-      const campRN = cr.results?.[0]?.resourceName;
+      const atomicResult = await gads('googleAds:mutate', {
+        mutateOperations: [
+          {
+            campaignBudgetOperation: {
+              create: {
+                resourceName: tempBudgetRN,
+                name: `Budget-${name}-${Date.now()}`,
+                amountMicros: String(Math.round(budget * 1e6)),
+                deliveryMethod: 'STANDARD',
+                explicitlyShared: false,
+              },
+            },
+          },
+          {
+            campaignOperation: {
+              create: campaignBody,
+            },
+          },
+        ],
+      });
+
+      // Extract real resource names from atomic response
+      const mutateResults = atomicResult?.mutateOperationResponses || [];
+      const budRN = mutateResults[0]?.campaignBudgetResult?.resourceName;
+      const campRN = mutateResults[1]?.campaignResult?.resourceName;
+      if (!budRN) throw new Error('Budget creation failed');
       if (!campRN) throw new Error('Campaign creation failed');
 
       // 3. Location targeting
