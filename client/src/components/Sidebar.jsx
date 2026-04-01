@@ -3,17 +3,17 @@ import useStore from '../store';
 
 const NAV_ITEMS = [
   { section: 'Setup' },
-  { path: '/app', icon: '📊', label: 'Dashboard' },
-  { path: '/app/api-key', icon: '🤖', label: 'AI API Key' },
-  { path: '/app/credentials', icon: '🔑', label: 'Google Ads Creds' },
+  { path: '/', icon: '📊', label: 'Dashboard' },
+  { path: '/api-key', icon: '🤖', label: 'AI API Key' },
+  { path: '/credentials', icon: '🔑', label: 'Google Ads Creds' },
   { section: 'Workflow', style: { marginTop: 6 } },
-  { path: '/app/scraper', icon: '🔍', label: '1. Scrape Client Site' },
-  { path: '/app/builder', icon: '🏗️', label: '2. Build Campaign' },
-  { path: '/app/campaigns', icon: '📡', label: '3. Live Campaigns' },
+  { path: '/scraper', icon: '🔍', label: '1. Scrape Client Site' },
+  { path: '/builder', icon: '🏗️', label: '2. Build Campaign' },
+  { path: '/campaigns', icon: '📡', label: '3. Live Campaigns' },
   { section: 'Tools', style: { marginTop: 6 } },
-  { path: '/app/keywords', icon: '🔤', label: 'Keyword Research' },
-  { path: '/app/ad-copy', icon: '✍️', label: 'Ad Copy Generator' },
-  { path: '/app/campaign-review', icon: '🔎', label: 'Campaign Review' },
+  { path: '/keywords', icon: '🔤', label: 'Keyword Research' },
+  { path: '/ad-copy', icon: '✍️', label: 'Ad Copy Generator' },
+  { path: '/campaign-review', icon: '🔎', label: 'Campaign Review' },
 ];
 
 export default function Sidebar() {
@@ -43,7 +43,7 @@ export default function Sidebar() {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `ni${isActive ? ' active' : ''}`}
-              end={item.path === '/app'}
+              end={item.path === '/'}
               onClick={closeSidebar}
             >
               <span className="ico">{item.icon}</span> {item.label}
