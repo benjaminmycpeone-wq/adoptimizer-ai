@@ -1,5 +1,6 @@
 """
 AdOptimizer AI — SQLAlchemy ORM Models
+(includes CPA Monitor models, prefixed with monitor_ table names)
 """
 
 from datetime import datetime, timezone
@@ -113,3 +114,165 @@ class ScrapeResult(db.Model):
             "summary": self.summary,
             "createdAt": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+# ── CPA Monitor Models ──────────────────────────────────────────────────────
+
+
+class Source(db.Model):
+    __tablename__ = "monitor_sources"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    name = db.Column(db.String, nullable=False)
+    url = db.Column(db.String, nullable=False)
+    blog_url = db.Column(db.String, nullable=True)
+    rss_url = db.Column(db.String, nullable=True)
+    linkedin_url = db.Column(db.String, nullable=True)
+    active = db.Column(db.Boolean, default=True)
+    last_scraped = db.Column(db.DateTime, nullable=True)
+    ipa_rank = db.Column(db.Integer, nullable=True)
+    firm_size = db.Column(db.String, default="regional")
+    state = db.Column(db.String, nullable=True)
+    niche = db.Column(db.String, nullable=True)
+    services = db.Column(db.String, nullable=True)
+    post_frequency = db.Column(db.String, nullable=True)
+    selector_config = db.Column(db.Text, nullable=True)
+    specialties = db.Column(db.Text, nullable=True)
+    source_authority = db.Column(db.Float, default=0.5)
+    scrape_error = db.Column(db.Text, nullable=True)
+    scrape_fail_count = db.Column(db.Integer, default=0)
+    scrape_success_count = db.Column(db.Integer, default=0)
+    topics = db.relationship("Topic", back_populates="source")
+
+
+class Topic(db.Model):
+    __tablename__ = "monitor_topics"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    source_id = db.Column(db.Integer, db.ForeignKey("monitor_sources.id"), nullable=False)
+    title = db.Column(db.String, nullable=False)
+    url = db.Column(db.String, nullable=True)
+    discovered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String, default="new")
+    recency_score = db.Column(db.Float, default=0.0)
+    coverage_score = db.Column(db.Float, default=0.0)
+    seo_score = db.Column(db.Float, default=0.0)
+    composite_score = db.Column(db.Float, default=0.0)
+    summary = db.Column(db.Text, nullable=True)
+    author = db.Column(db.String, nullable=True)
+    published_at = db.Column(db.DateTime, nullable=True)
+    category = db.Column(db.String, nullable=True)
+    niche = db.Column(db.String, nullable=True)
+    keywords_extracted = db.Column(db.Text, nullable=True)
+    source = db.relationship("Source", back_populates="topics")
+    assignments = db.relationship("Assignment", back_populates="topic")
+    relevances = db.relationship("ClientTopicRelevance", back_populates="topic")
+
+
+class MonitorClient(db.Model):
+    __tablename__ = "monitor_clients"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    name = db.Column(db.String, nullable=False)
+    audience = db.Column(db.String, default="small business owners")
+    tone = db.Column(db.String, default="conversational")
+    keywords = db.Column(db.Text, default="")
+    wp_url = db.Column(db.String, nullable=True)
+    active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    assignments = db.relationship("Assignment", back_populates="client")
+    wordpress_sites = db.relationship("WordPressSite", back_populates="client")
+    relevances = db.relationship("ClientTopicRelevance", back_populates="client")
+
+
+# Alias so business logic modules can import Client
+Client = MonitorClient
+
+
+class Assignment(db.Model):
+    __tablename__ = "monitor_assignments"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    topic_id = db.Column(db.Integer, db.ForeignKey("monitor_topics.id"), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey("monitor_clients.id"), nullable=False)
+    status = db.Column(db.String, default="pending")
+    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    topic = db.relationship("Topic", back_populates="assignments")
+    client = db.relationship("MonitorClient", back_populates="assignments")
+    posts = db.relationship("Post", back_populates="assignment")
+
+
+class Post(db.Model):
+    __tablename__ = "monitor_posts"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    assignment_id = db.Column(db.Integer, db.ForeignKey("monitor_assignments.id"), nullable=False)
+    body = db.Column(db.Text, default="")
+    word_count = db.Column(db.Integer, default=0)
+    status = db.Column(db.String, default="draft")
+    reviewer_notes = db.Column(db.Text, default="")
+    wp_post_id = db.Column(db.Integer, nullable=True)
+    wp_post_url = db.Column(db.String, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    assignment = db.relationship("Assignment", back_populates="posts")
+    comments = db.relationship("Comment", back_populates="post")
+    publish_logs = db.relationship("PublishLog", back_populates="post")
+
+
+class Comment(db.Model):
+    __tablename__ = "monitor_comments"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("monitor_posts.id"), nullable=False)
+    author = db.Column(db.String, default="Reviewer")
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    post = db.relationship("Post", back_populates="comments")
+
+
+class WordPressSite(db.Model):
+    __tablename__ = "monitor_wordpress_sites"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    client_id = db.Column(db.Integer, db.ForeignKey("monitor_clients.id"), nullable=True)
+    label = db.Column(db.String, nullable=False)
+    api_url = db.Column(db.String, nullable=False)
+    username = db.Column(db.String, nullable=False)
+    app_password = db.Column(db.String, nullable=False)
+    default_category = db.Column(db.Integer, default=1)
+    publish_mode = db.Column(db.String, default="draft")
+    active = db.Column(db.Boolean, default=True)
+    client = db.relationship("MonitorClient", back_populates="wordpress_sites")
+    publish_logs = db.relationship("PublishLog", back_populates="site")
+
+
+class PublishLog(db.Model):
+    __tablename__ = "monitor_publish_logs"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("monitor_posts.id"), nullable=False)
+    site_id = db.Column(db.Integer, db.ForeignKey("monitor_wordpress_sites.id"), nullable=False)
+    success = db.Column(db.Boolean, default=False)
+    wp_post_id = db.Column(db.Integer, nullable=True)
+    wp_post_url = db.Column(db.String, nullable=True)
+    message = db.Column(db.Text, default="")
+    attempted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    post = db.relationship("Post", back_populates="publish_logs")
+    site = db.relationship("WordPressSite", back_populates="publish_logs")
+
+
+class TrendSnapshot(db.Model):
+    __tablename__ = "monitor_trend_snapshots"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    snapshot_date = db.Column(db.DateTime, default=datetime.utcnow)
+    keyword = db.Column(db.String, nullable=False, index=True)
+    occurrence_count = db.Column(db.Integer, default=0)
+    source_count = db.Column(db.Integer, default=0)
+    velocity = db.Column(db.Float, default=0.0)
+    category = db.Column(db.String, nullable=True)
+
+
+class ClientTopicRelevance(db.Model):
+    __tablename__ = "monitor_client_topic_relevances"
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    client_id = db.Column(db.Integer, db.ForeignKey("monitor_clients.id"), nullable=False)
+    topic_id = db.Column(db.Integer, db.ForeignKey("monitor_topics.id"), nullable=False)
+    relevance_score = db.Column(db.Float, default=0.0)
+    keyword_overlap = db.Column(db.Float, default=0.0)
+    audience_alignment = db.Column(db.Float, default=0.0)
+    computed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    client = db.relationship("MonitorClient", back_populates="relevances")
+    topic = db.relationship("Topic", back_populates="relevances")

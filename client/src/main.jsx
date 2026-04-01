@@ -8,6 +8,7 @@ import './styles/variables.css';
 import './styles/base.css';
 import './styles/components.css';
 import './styles/pages.css';
+import './styles/monitor.css';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ApiKey = lazy(() => import('./pages/ApiKey'));
@@ -18,6 +19,14 @@ const Keywords = lazy(() => import('./pages/Keywords'));
 const AdCopy = lazy(() => import('./pages/AdCopy'));
 const Campaigns = lazy(() => import('./pages/Campaigns'));
 const CampaignReview = lazy(() => import('./pages/CampaignReview'));
+
+const MonitorDashboard = lazy(() => import('./pages/monitor/MonitorDashboard'));
+const Sources = lazy(() => import('./pages/monitor/Sources'));
+const Trends = lazy(() => import('./pages/monitor/Trends'));
+const Generator = lazy(() => import('./pages/monitor/Generator'));
+const MonitorReview = lazy(() => import('./pages/monitor/MonitorReview'));
+const Publisher = lazy(() => import('./pages/monitor/Publisher'));
+const MonitorClients = lazy(() => import('./pages/monitor/MonitorClients'));
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -34,6 +43,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="ad-copy" element={<Suspense fallback={<PageSkeleton />}><AdCopy /></Suspense>} />
             <Route path="campaigns" element={<Suspense fallback={<PageSkeleton />}><Campaigns /></Suspense>} />
             <Route path="campaign-review" element={<Suspense fallback={<PageSkeleton />}><CampaignReview /></Suspense>} />
+            <Route path="monitor" element={<Suspense fallback={<PageSkeleton />}><MonitorDashboard /></Suspense>} />
+            <Route path="monitor/sources" element={<Suspense fallback={<PageSkeleton />}><Sources /></Suspense>} />
+            <Route path="monitor/trends" element={<Suspense fallback={<PageSkeleton />}><Trends /></Suspense>} />
+            <Route path="monitor/generator" element={<Suspense fallback={<PageSkeleton />}><Generator /></Suspense>} />
+            <Route path="monitor/review" element={<Suspense fallback={<PageSkeleton />}><MonitorReview /></Suspense>} />
+            <Route path="monitor/publisher" element={<Suspense fallback={<PageSkeleton />}><Publisher /></Suspense>} />
+            <Route path="monitor/clients" element={<Suspense fallback={<PageSkeleton />}><MonitorClients /></Suspense>} />
           </Route>
         </Routes>
       </BrowserRouter>

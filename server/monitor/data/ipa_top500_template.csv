@@ -1,0 +1,31 @@
+rank,name,main_url,blog_url,specialties,firm_size
+1,Deloitte,https://www2.deloitte.com,https://www2.deloitte.com/us/en/insights/topics/tax.html,"tax,audit,advisory",big4
+2,PwC,https://www.pwc.com,https://www.pwc.com/us/en/services/tax/library.html,"tax,consulting",big4
+3,EY,https://www.ey.com,https://www.ey.com/en_us/tax,"tax,audit,advisory",big4
+4,KPMG,https://kpmg.com,https://kpmg.com/us/en/home/insights/tax.html,"tax,audit",big4
+5,RSM US,https://rsmus.com,https://rsmus.com/insights/tax-alerts.html,"tax,audit",top10
+6,Grant Thornton,https://www.grantthornton.com,https://www.grantthornton.com/insights/articles/tax,"tax,audit,advisory",top10
+7,BDO USA,https://www.bdo.com,https://www.bdo.com/insights/tax,"tax,audit",top10
+8,Crowe,https://www.crowe.com,https://www.crowe.com/insights/tax,"tax,audit",top10
+9,CLA (CliftonLarsonAllen),https://www.claconnect.com,https://www.claconnect.com/en/resources?type=article&topic=tax,"tax,audit,advisory",top10
+10,CBIZ,https://www.cbiz.com,https://www.cbiz.com/insights,"tax,advisory",top10
+11,Marcum,https://www.marcumllp.com,https://www.marcumllp.com/insights,"tax,audit",top25
+12,Cherry Bekaert,https://www.cbh.com,https://www.cbh.com/insights,"tax,audit",top25
+13,Moss Adams,https://www.mossadams.com,https://www.mossadams.com/articles,"tax,audit,advisory",top25
+14,Plante Moran,https://www.plantemoran.com,https://www.plantemoran.com/explore-our-thinking/insight,"tax,audit,advisory",top25
+15,Forvis Mazars,https://www.forvismazars.us,https://www.forvismazars.us/forsights,"tax,audit",top25
+16,Withum,https://www.withum.com,https://www.withum.com/resources,"tax,audit,advisory",top25
+17,Sikich,https://www.sikich.com,https://www.sikich.com/insights,"tax,advisory,technology",top25
+18,Wipfli,https://www.wipfli.com,https://www.wipfli.com/insights,"tax,audit,advisory",top25
+19,Armanino,https://www.armanino.com,https://www.armanino.com/articles,"tax,consulting,technology",top25
+20,Citrin Cooperman,https://www.citrincooperman.com,https://www.citrincooperman.com/insights,"tax,audit",top25
+21,EisnerAmper,https://www.eisneramper.com,https://www.eisneramper.com/insights,"tax,audit,advisory",top25
+22,Carr Riggs & Ingram,https://www.cricpa.com,,"tax,audit",top25
+23,Mazars (legacy),https://www.mazars.com,,"tax,audit",top25
+24,Kforce,https://www.kforce.com,,"staffing,advisory",top25
+25,UHY,https://uhy-us.com,https://uhy-us.com/insights,"tax,audit",top25
+26,Aprio,https://www.aprio.com,https://www.aprio.com/insights,"tax,advisory",top50
+27,Berdon,https://www.berdonllp.com,,"tax,audit",top50
+28,Rehmann,https://www.rehmann.com,https://www.rehmann.com/resources,"tax,audit,advisory",top50
+29,Kaufman Rossin,https://www.kaufmanrossin.com,https://www.kaufmanrossin.com/insights,"tax,audit",top50
+30,Herbein + Company,https://www.herbein.com,,"tax,audit",top50
