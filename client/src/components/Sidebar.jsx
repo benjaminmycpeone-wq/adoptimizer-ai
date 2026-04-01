@@ -28,12 +28,11 @@ export default function Sidebar() {
     <>
       {sidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}`} role="navigation" aria-label="Main navigation">
-        <a href="/" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-          <div className="logo">
-            <h1>⚡ AdOptimizer AI</h1>
-            <p>Google Ads Campaign Builder</p>
-          </div>
-        </a>
+        <div className="logo">
+          <img src="/logo.png" alt="MyCPE ONE" style={{ height: 28, marginBottom: 6, display: 'block' }} />
+          <h1>⚡ AdOptimizer AI</h1>
+          <p>Google Ads Campaign Builder</p>
+        </div>
 
         {NAV_ITEMS.map((item, i) =>
           item.section ? (
