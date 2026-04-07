@@ -33,8 +33,9 @@ def create_app():
     app.register_blueprint(ai_bp)
     app.register_blueprint(google_ads_bp)
 
-    from .monitor.blueprints import monitor_bp
-    app.register_blueprint(monitor_bp)
+    # CPA Monitor blueprint disabled for now
+    # from .monitor.blueprints import monitor_bp
+    # app.register_blueprint(monitor_bp)
 
     # Security headers
     @app.after_request
