@@ -5,9 +5,24 @@ import { callAI } from '../api';
 import { PROMPTS } from '../constants';
 import AiOutput from '../components/AiOutput';
 
-function parseActions(text) {
+function parseActions(text, campaignData) {
   const actions = [];
-  // Match ```json blocks — handle optional whitespace, newlines, and language tag variations
+  // Build sets of valid resource names from actual campaign data for validation
+  const validResources = new Set();
+  const validAdGroups = new Set();
+  if (campaignData) {
+    const resPattern = /\[resource: (customers\/\d+\/[^\]]+)\]/g;
+    const agPattern = /\[adGroup: (customers\/\d+\/adGroups\/\d+)\]/g;
+    let m;
+    while ((m = resPattern.exec(campaignData.keywordsFormatted || '')) !== null) validResources.add(m[1]);
+    while ((m = resPattern.exec(campaignData.adsFormatted || '')) !== null) validResources.add(m[1]);
+    // Reset lastIndex for reuse
+    resPattern.lastIndex = 0;
+    while ((m = resPattern.exec(campaignData.adGroupsFormatted || '')) !== null) validResources.add(m[1]);
+    while ((m = agPattern.exec(campaignData.keywordsFormatted || '')) !== null) validAdGroups.add(m[1]);
+  }
+
+  // Match ```json blocks
   const patterns = [
     /```json\s*\n?([\s\S]*?)```/g,
     /```JSON\s*\n?([\s\S]*?)```/g,
@@ -20,12 +35,26 @@ function parseActions(text) {
       try {
         const raw = match[1].trim();
         const parsed = JSON.parse(raw);
-        if (parsed.type && ['ADD_NEGATIVE', 'PAUSE_KEYWORD', 'ADD_KEYWORD', 'PAUSE_AD', 'UPDATE_BUDGET'].includes(parsed.type)) {
-          const key = `${parsed.type}|${parsed.keyword || ''}|${parsed.resourceName || ''}|${parsed.newBudget || ''}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            actions.push({ ...parsed, checked: true, status: 'pending' });
+        if (!parsed.type || !['ADD_NEGATIVE', 'PAUSE_KEYWORD', 'ADD_KEYWORD', 'PAUSE_AD', 'UPDATE_BUDGET'].includes(parsed.type)) continue;
+
+        // Validate resource names — reject fabricated ones
+        if (parsed.type === 'PAUSE_KEYWORD' || parsed.type === 'PAUSE_AD') {
+          if (!parsed.resourceName || !validResources.has(parsed.resourceName)) {
+            console.warn(`Skipping ${parsed.type}: invalid resource "${parsed.resourceName}"`);
+            continue;
           }
+        }
+        if (parsed.type === 'ADD_KEYWORD') {
+          if (!parsed.adGroupResource || !validAdGroups.has(parsed.adGroupResource)) {
+            console.warn(`Skipping ADD_KEYWORD: invalid adGroup "${parsed.adGroupResource}"`);
+            continue;
+          }
+        }
+
+        const key = `${parsed.type}|${parsed.keyword || ''}|${parsed.resourceName || ''}|${parsed.newBudget || ''}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          actions.push({ ...parsed, checked: true, status: 'pending' });
         }
       } catch { /* skip */ }
     }
@@ -74,7 +103,7 @@ export default function CampaignReview() {
 
   useEffect(() => {
     if (text && !reviewing) {
-      const parsed = parseActions(text);
+      const parsed = parseActions(text, campaignData);
       if (parsed.length > 0) setActions(parsed);
     }
   }, [text, reviewing]);

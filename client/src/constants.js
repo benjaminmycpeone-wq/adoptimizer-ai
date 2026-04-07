@@ -432,16 +432,23 @@ Table: Priority (1-5) | Change | Expected QS Impact | Difficulty`
 | Ad Strength | Average | Good | Excellent |
 
 ## CRITICAL OUTPUT RULES FOR EXECUTABLE ACTIONS
-- Output each action as a SEPARATE \`\`\`json code block on its own
-- Use EXACT resource names from the provided campaign data — NEVER fabricate or guess resource names
-- The "keyword" field is REQUIRED for PAUSE_KEYWORD and ADD_NEGATIVE actions
-- The "resourceName" field must use the EXACT value from the data for PAUSE_KEYWORD and PAUSE_AD
-- The "adGroupResource" field must use the EXACT value from the data for ADD_KEYWORD
-- Group actions in this order: ADD_NEGATIVE first, then PAUSE_KEYWORD, ADD_KEYWORD, PAUSE_AD, UPDATE_BUDGET
+
+**RESOURCE NAME RULES — READ CAREFULLY:**
+- PAUSE_KEYWORD and PAUSE_AD require a "resourceName" field. This MUST be copied EXACTLY from the "[resource: ...]" tags in the campaign data. Example: "customers/1234567890/adGroupCriteria/111111111~222222222"
+- ADD_KEYWORD requires an "adGroupResource" field. This MUST be copied EXACTLY from the "[adGroup: ...]" tags in the keyword data. Example: "customers/1234567890/adGroups/111111111"
+- NEVER invent, guess, or construct resource names. If you cannot find the exact resource name in the data, DO NOT output that action.
+- If a resource name contains "xxx" or placeholder text, DO NOT use it — find the real one in the data above.
+
+**ACTION TYPE RULES — DO NOT CONFUSE THESE:**
+- **PAUSE_KEYWORD** = Pause an EXISTING keyword that IS in the account (listed in the Keywords section above). Only use this for keywords you can see in the data with a real resource name.
+- **ADD_NEGATIVE** = Block a search TERM from triggering ads. Use this for wasteful search terms OR for general negative terms (like "free", "jobs", "tutorial"). This does NOT require a resourceName — only a keyword and matchType.
+- **NEVER use PAUSE_KEYWORD to block general terms like "free", "test", "software", "download", "youtube", "tutorial", "exam", "PDF" etc.** These are ADD_NEGATIVE actions, not PAUSE_KEYWORD.
+
+**OTHER RULES:**
+- Output each action as a SEPARATE \`\`\`json code block
+- Group actions: ADD_NEGATIVE first, then PAUSE_KEYWORD, ADD_KEYWORD, PAUSE_AD, UPDATE_BUDGET
 - Output 10-25 actions total — prioritized by dollar impact
 - Every "reason" must cite SPECIFIC data points (QS score, click count, cost figure, conversion count)
-- For ADD_NEGATIVE: extract the wasteful search term EXACTLY as it appears in the search term data
-- For PAUSE_KEYWORD: only pause keywords with clear evidence of poor performance (low QS + high spend + 0 conversions)
 - For ADD_KEYWORD: only suggest keywords that appeared as high-performing search terms`,
 
     user: `Perform a comprehensive expert audit of this Google Ads campaign. Think step by step like a senior Google Ads strategist.
