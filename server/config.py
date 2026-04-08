@@ -87,6 +87,7 @@ DIFF_MAP = {
 # ── AI Provider Endpoints ──
 AI_ENDPOINTS = {
     "anthropic": "https://api.anthropic.com/v1/messages",
+    "qwen": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
     "moonshot": "https://api.moonshot.cn/v1/chat/completions",
     "openai": "https://api.openai.com/v1/chat/completions",
     "openrouter": "https://openrouter.ai/api/v1/chat/completions",

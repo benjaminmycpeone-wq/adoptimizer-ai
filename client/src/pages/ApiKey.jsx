@@ -66,6 +66,7 @@ export default function ApiKey() {
           <label>Provider</label>
           <select value={prov} onChange={(e) => handleProvChange(e.target.value)}>
             <option value="anthropic">Anthropic (Claude) — Recommended</option>
+            <option value="qwen">Qwen (Alibaba Cloud)</option>
             <option value="openai">OpenAI (GPT-4o)</option>
             <option value="moonshot">Moonshot (Kimi)</option>
             <option value="openrouter">OpenRouter (Free models available)</option>
@@ -101,6 +102,7 @@ export default function ApiKey() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 13, color: 'var(--text2)' }}>
         <div>🟣 <b>Anthropic:</b> <a href="https://console.anthropic.com" target="_blank" rel="noreferrer">console.anthropic.com</a> → API Keys</div>
+        <div>🟠 <b>Qwen:</b> <a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" rel="noreferrer">dashscope.console.aliyun.com</a> → API Keys</div>
         <div>🟢 <b>OpenAI:</b> <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a></div>
         <div>🔀 <b>OpenRouter:</b> <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">openrouter.ai/keys</a> (has free tiers)</div>
       </div>

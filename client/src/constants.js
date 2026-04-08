@@ -1,5 +1,6 @@
 export const MODELS = {
   anthropic: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],
+  qwen: ['qwen-plus', 'qwen-turbo', 'qwen-max', 'qwen-long'],
   moonshot: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
   openrouter: [
