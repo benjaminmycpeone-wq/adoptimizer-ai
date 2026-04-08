@@ -7,19 +7,28 @@ import AiOutput from '../components/AiOutput';
 
 function parseActions(text, campaignData) {
   const actions = [];
-  // Build sets of valid resource names from actual campaign data for validation
+  // Build sets of valid resource names and keyword texts from actual campaign data
   const validResources = new Set();
   const validAdGroups = new Set();
+  const validKeywordTexts = new Set();
   if (campaignData) {
-    const resPattern = /\[resource: (customers\/\d+\/[^\]]+)\]/g;
-    const agPattern = /\[adGroup: (customers\/\d+\/adGroups\/\d+)\]/g;
-    let m;
-    while ((m = resPattern.exec(campaignData.keywordsFormatted || '')) !== null) validResources.add(m[1]);
-    while ((m = resPattern.exec(campaignData.adsFormatted || '')) !== null) validResources.add(m[1]);
-    // Reset lastIndex for reuse
-    resPattern.lastIndex = 0;
-    while ((m = resPattern.exec(campaignData.adGroupsFormatted || '')) !== null) validResources.add(m[1]);
-    while ((m = agPattern.exec(campaignData.keywordsFormatted || '')) !== null) validAdGroups.add(m[1]);
+    // Extract all resource names from campaign data
+    const allData = [
+      campaignData.keywordsFormatted || '',
+      campaignData.adsFormatted || '',
+      campaignData.adGroupsFormatted || '',
+    ].join('\n');
+    for (const m of allData.matchAll(/\[resource: (customers\/\d+\/[^\]]+)\]/g)) {
+      validResources.add(m[1]);
+    }
+    for (const m of (campaignData.keywordsFormatted || '').matchAll(/\[adGroup: (customers\/\d+\/adGroups\/\d+)\]/g)) {
+      validAdGroups.add(m[1]);
+    }
+    // Extract actual keyword texts from the keywords data
+    for (const m of (campaignData.keywordsFormatted || '').matchAll(/\] (.+?) \((BROAD|PHRASE|EXACT)\)/g)) {
+      validKeywordTexts.add(m[1].toLowerCase());
+    }
+    console.log('Valid resources:', validResources.size, 'Valid keywords:', [...validKeywordTexts]);
   }
 
   // Match ```json blocks
@@ -38,9 +47,22 @@ function parseActions(text, campaignData) {
         if (!parsed.type || !['ADD_NEGATIVE', 'PAUSE_KEYWORD', 'ADD_KEYWORD', 'PAUSE_AD', 'UPDATE_BUDGET'].includes(parsed.type)) continue;
 
         // Validate resource names — reject fabricated ones
-        if (parsed.type === 'PAUSE_KEYWORD' || parsed.type === 'PAUSE_AD') {
+        if (parsed.type === 'PAUSE_KEYWORD') {
+          const hasValidResource = parsed.resourceName && validResources.has(parsed.resourceName);
+          const hasValidKeyword = parsed.keyword && validKeywordTexts.has(parsed.keyword.toLowerCase());
+          if (!hasValidResource && !hasValidKeyword) {
+            console.warn(`Skipping PAUSE_KEYWORD: "${parsed.keyword}" not found in account keywords, resource "${parsed.resourceName}" not valid`);
+            continue;
+          }
+          // If keyword text doesn't match any real keyword, it should be ADD_NEGATIVE instead
+          if (!hasValidKeyword) {
+            console.warn(`Skipping PAUSE_KEYWORD: "${parsed.keyword}" not in account — should be ADD_NEGATIVE`);
+            continue;
+          }
+        }
+        if (parsed.type === 'PAUSE_AD') {
           if (!parsed.resourceName || !validResources.has(parsed.resourceName)) {
-            console.warn(`Skipping ${parsed.type}: invalid resource "${parsed.resourceName}"`);
+            console.warn(`Skipping PAUSE_AD: invalid resource "${parsed.resourceName}"`);
             continue;
           }
         }
