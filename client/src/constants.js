@@ -5,6 +5,9 @@ export const MODELS = {
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
   openrouter: [
     'openrouter/auto',
+    'qwen/qwen3-235b-a22b',
+    'qwen/qwen-plus',
+    'qwen/qwen-turbo',
     'google/gemini-2.0-flash-exp:free',
     'google/gemma-3-27b-it:free',
     'mistralai/mistral-small-3.1-24b-instruct:free',
