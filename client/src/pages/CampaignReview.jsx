@@ -246,7 +246,7 @@ export default function CampaignReview() {
         ads: campaignData.adsFormatted,
         searchTerms: campaignData.searchTermsFormatted,
       });
-      const result = await callAI(user, (_, full) => setText(full), { maxTokens: 12000, system });
+      const result = await callAI(user, (_, full) => setText(full), { maxTokens: 16000, system });
       setText(result);
       log(`AI review complete: ${selected.name}`);
     } catch (e) {

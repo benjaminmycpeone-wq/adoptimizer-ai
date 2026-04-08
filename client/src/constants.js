@@ -451,7 +451,7 @@ Table: Priority (1-5) | Change | Expected QS Impact | Difficulty`
 **OTHER RULES:**
 - Output each action as a SEPARATE \`\`\`json code block
 - Group actions: ADD_NEGATIVE first, then PAUSE_KEYWORD, ADD_KEYWORD, PAUSE_AD, UPDATE_BUDGET
-- Output 10-25 actions total — prioritized by dollar impact
+- Output 15-50 actions total — prioritized by dollar impact
 - Every "reason" must cite SPECIFIC data points (QS score, click count, cost figure, conversion count)
 - For ADD_KEYWORD: only suggest keywords that appeared as high-performing search terms`,
 
@@ -545,7 +545,7 @@ Provide specific rewrite suggestions for weak elements.
 
 ### 7. ⚡ Executable Actions (MOST CRITICAL SECTION)
 
-Output 10-25 actions as separate JSON blocks. Order by estimated dollar impact (highest savings first).
+Output 15-50 actions as separate JSON blocks. Order by estimated dollar impact (highest savings first).
 
 **ADD_NEGATIVE** — Block wasteful search terms:
 \`\`\`json
